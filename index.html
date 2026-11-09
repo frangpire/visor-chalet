@@ -94,7 +94,7 @@ const VER='v19';
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest/i.test(navigator.userAgent);
 const Q=P.get('q')||((isQuest||('ontouchstart' in window))?'quest':'alta'); const ALTA=Q==='alta';
-const GLB=ALTA?"chalet_v18_alta_728b49274d86af0d.glb":"chalet_v18_quest_cb32055f21329115.glb", LMD=ALTA?'lm/':'lm_q/';
+const GLB=ALTA?"chalet_v18_alta_8604af4bb8fe7f35.glb":"chalet_v18_quest_2e205990055a58fc.glb", LMD=ALTA?'lm/':'lm_q/';
 const LM_FILES=ALTA?{"caseto":"caseto_e96d80ebe10a037f.jpg","ext_house":"ext_house_90b6ba517fec3e9f.jpg","ground":"ground_95a7385007df929b.jpg","gym":"gym_98ced460bf75fae2.jpg","pa_e":"pa_e_44ecdb5c6e7e904e.jpg","pa_w":"pa_w_d42aebf11a921e42.jpg","pb_east":"pb_east_367114463107eac3.jpg","pb_main":"pb_main_aecf6a6d92bab9b1.jpg"}:{"caseto":"caseto_58a702d7bddb6f3e.jpg","ext_house":"ext_house_cb37c38b00cd1fa8.jpg","ground":"ground_25ef70644547613e.jpg","gym":"gym_06fd4afceb0504e5.jpg","pa_e":"pa_e_343639fe6acf5da7.jpg","pa_w":"pa_w_c1773755dbe6169e.jpg","pb_east":"pb_east_8c6069fc20cf760a.jpg","pb_main":"pb_main_6f44fb335d674459.jpg"};
 if(P.get('ui')==='0')document.body.classList.add('hide');
 const S=(x,y,z)=>new THREE.Vector3(x,z,-y); // scene.py (x,y,z) -> three (x,z,-y)
@@ -296,7 +296,7 @@ const MM={x0:-10,x1:22,y0:-14,y1:30}; const mmc=document.getElementById('mmc'),m
 const MW=570; // HiDPI backing buffer, CSS determines visible size.
 const MINI={pb:{x0:-6.6,x1:21.2,y0:-14,y1:14.8},pa:{x0:-.9,x1:12.9,y0:-.9,y1:13.5}};
 function planCrop(pa){const b=MINI[pa?'pa':'pb'];return{x:(b.x0-MM.x0)/(MM.x1-MM.x0),y:(MM.y1-b.y1)/(MM.y1-MM.y0),w:(b.x1-b.x0)/(MM.x1-MM.x0),h:(b.y1-b.y0)/(MM.y1-MM.y0)};}
-const imgs={pb:new Image(),pa:new Image()}; imgs.pb.src='minimap_pb_735dd152480862ff.png'; imgs.pa.src='minimap_pa_a45e4c8b53c68dea.png';
+const imgs={pb:new Image(),pa:new Image()}; imgs.pb.src='minimap_pb_735dd152480862ff.png'; imgs.pa.src='minimap_pa_6651999438f78c04.png';
 function headXY(){const hw=new THREE.Vector3();if(nav.walking)nav.camera.getWorldPosition(hw);else hw.copy(nav.orbit.target); const dir=new THREE.Vector3(); nav.camera.getWorldDirection(dir); return {x:hw.x,y:-hw.z,a:Math.atan2(-dir.z,dir.x)};}
 function drawArrow(g,px,py,a,s){g.fillStyle='#d0302a'; g.beginPath(); g.moveTo(px+Math.cos(a)*9*s,py-Math.sin(a)*9*s); g.lineTo(px+Math.cos(a+2.5)*6*s,py-Math.sin(a+2.5)*6*s); g.lineTo(px+Math.cos(a-2.5)*6*s,py-Math.sin(a-2.5)*6*s); g.fill();}
 function drawMM(){const pa=mapIsPA(),b=MINI[pa?'pa':'pb'],crop=planCrop(pa); document.getElementById('mmt').textContent=pa?'Planta alta':'Planta baja';
