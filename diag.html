@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico visor</title><body style="font:18px system-ui;background:#fff;color:#111;padding:20px">
+<h1 style="color:#060">1. La página ha llegado (HTML OK)</h1><ul id="r"><li>2. JavaScript: NO se ejecuta</li></ul>
+<script>
+var r=document.getElementById('r');r.innerHTML='<li>2. JavaScript: OK</li>';
+function add(t){var l=document.createElement('li');l.textContent=t;r.appendChild(l)}
+var c=document.createElement('canvas');add('3. WebGL2: '+(c.getContext('webgl2')?'OK':'NO'));
+var t0=performance.now();
+fetch('./lib/three.module.js',{cache:'no-store'}).then(function(x){return x.arrayBuffer().then(function(b){add('4. Librería 3D: '+x.status+' '+Math.round(b.byteLength/1024)+' KB en '+Math.round(performance.now()-t0)+' ms')})}).catch(function(e){add('4. Librería 3D: ERROR '+e)});
+add('Navegador: '+navigator.userAgent);
+</script></body></html>
