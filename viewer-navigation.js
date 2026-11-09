@@ -9,7 +9,7 @@ export function initialView(search) {
 export function createNavigation({renderer,walkCamera,onChange=()=>{},clearInput=()=>{},search='',viewport=()=>({width:innerWidth,height:innerHeight}),urlChange=()=>{}}) {
  const aerialCamera=new THREE.PerspectiveCamera(70,1,0.1,900);
  const orbit=new OrbitControls(aerialCamera,renderer.domElement);
- orbit.touchRotateDirection=-1; // Screen-finger rotation only; mouse, pinch and two-finger pan stay unchanged.
+ orbit.touchRotateDirection=1; // Screen-finger rotation only; mouse, pinch and two-finger pan stay unchanged.
  orbit.enabled=false; orbit.enableDamping=true; orbit.dampingFactor=0.08;
  orbit.screenSpacePanning=false; orbit.minDistance=6; orbit.maxDistance=160;
  orbit.minPolarAngle=0.05; orbit.maxPolarAngle=Math.PI/2-0.035;
