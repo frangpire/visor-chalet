@@ -32,7 +32,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfdbe6;font-family:sy
 #pc{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:grab}
 #VRButton{position:static!important;transform:none!important;width:100%!important;left:auto!important;bottom:auto!important;margin:0!important;background:#2d5a3d!important;opacity:1!important;font-size:14px!important;padding:10px!important;border-radius:9px!important;border:0!important}
 body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
-@media(max-width:700px){.b{font-size:12px;padding:6px 8px;min-height:34px}#mm{width:40vw}}
+@media(max-width:700px){.b{font-size:12px;padding:6px 8px;min-height:34px}#mm{width:34vw;top:auto;bottom:96px;right:8px}}
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}</script>
 </head><body>
@@ -73,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_2b30a7973f7b.json')).json();
+const CFG=await (await fetch('config_ad2d7d9948a4.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -88,7 +88,7 @@ const rig=new THREE.Group(); scene.add(rig);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,1500); camera.position.set(0,1.62,0); rig.add(camera);
 const aerial=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,2000);
 const orbit=new OrbitControls(aerial,renderer.domElement); orbit.enableDamping=true; orbit.maxPolarAngle=Math.PI*0.47; orbit.minDistance=4; orbit.maxDistance=90;
-function resetAerial(){aerial.position.copy(W2T(-8,-14,17)); orbit.target.copy(W2T(10,6,0)); orbit.update();}
+function resetAerial(){ const k=innerWidth<innerHeight?1.9:1; aerial.position.copy(W2T(10+(-18)*k,6+(-20)*k,17*k)); orbit.target.copy(W2T(10,6,0)); orbit.update();}   // movil vertical: mas lejos
 resetAerial();
 // ---------------------------------------------------------------- cielo
 const texL=new THREE.TextureLoader();
@@ -114,7 +114,7 @@ const loader=new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder); loader.
 const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.4+0.5*e.loaded/e.total);});
 setLoad(0.92,'Preparando…');
 const house=gltf.scene; scene.add(house);
-let mirrors=[], ntri=0, ndraw=0; const matCache=new Map(); const emisMats=[], zoneMats=[]; let water=null;
+let mirrors=[], ntri=0, ndraw=0; const matCache=new Map(); const emisMats=[], zoneMats=[], frosted=[]; let water=null;
 house.traverse(o=>{
  if(!o.isMesh) return; ndraw++; ntri+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;
  let p=o, zn=null; while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name;break;} p=p.parent; }
@@ -127,6 +127,7 @@ house.traverse(o=>{
   o.userData.zone=z;
  } else {
   if(mn==='agua'){ o.material=new THREE.MeshPhysicalMaterial({color:0x5fb8c8,metalness:0,roughness:0.04,transparent:true,opacity:0.62,envMapIntensity:1.0,depthWrite:false,emissive:0x1d6f86,emissiveIntensity:0}); o.renderOrder=2; water=o.material; }
+  else if(mn==='vidrio_mate'){ o.material=new THREE.MeshStandardMaterial({color:0xf2f3f1,metalness:0,roughness:0.55,transparent:true,opacity:0.72,envMapIntensity:0.45,depthWrite:false,side:THREE.DoubleSide}); o.renderOrder=2; frosted.push(o.material); }
   else if(mn==='vidrio'){ o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.02,transparent:true,opacity:0.10,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide}); o.renderOrder=2; }
   else if(mn==='espejo'){ o.material=new THREE.MeshStandardMaterial({color:0xf2f2f2,metalness:1,roughness:0.015}); mirrors.push(o); }
  }
@@ -148,7 +149,7 @@ async function setLightMode(k){
    const kl=M.lamp?Math.PI*CFG.K.lamp[z]*M.lamp:0; U.uLampK.value.set(kl*M.lampTint[0],kl*M.lampTint[1],kl*M.lampTint[2]); U.uLampMap.value=lamp?lamp[z]:base[z]; }
  for(const m of zoneMats) m.lightMap=base[m.userData.zone];
  for(const m of emisMats) m.emissiveIntensity=m.userData.emis0*M.emis;
- if(water) water.emissiveIntensity=M.pool;
+ if(water) water.emissiveIntensity=M.pool; for(const m of frosted){ m.emissive.setHex(0xfff2e2); m.emissiveIntensity=k==='dia'?0.10:0.08; }
  scene.background=S.tex; scene.environment=S.env; scene.backgroundIntensity=M.bg; scene.environmentIntensity=M.env;
  far.material.color.setRGB(M.far[0],M.far[1],M.far[2]);
  curMode=k; document.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===k)); vrBtns.forEach(b=>b.userData.draw(b.userData.mode===k));
@@ -204,8 +205,11 @@ document.querySelectorAll('[data-q]').forEach(b=>{b.classList.toggle('on',b.data
 addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='Escape'){$('plan').hidden=true;}}); addEventListener('keyup',e=>{keys[e.code]=false;});
 // mirar con arrastre
 let drag=null; const cv=renderer.domElement;
-cv.addEventListener('pointerdown',e=>{ if(mode!=='walk') return; drag={x:e.clientX,y:e.clientY,id:e.pointerId}; cv.setPointerCapture(e.pointerId); });
-cv.addEventListener('pointermove',e=>{ if(!drag||drag.id!==e.pointerId) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; yaw-=dx*0.0045; pitch=THREE.MathUtils.clamp(pitch-dy*0.0035,-1.3,1.3); applyRig(); });
+// Fran: arrastre tactil invertido en ambos ejes (como el visor de Liencres, touchRotateDirection=1); raton y mandos VR sin cambios
+const TOUCH_DIR=1;
+cv.addEventListener('pointerdown',e=>{ orbit.rotateSpeed=(e.pointerType==='touch'&&TOUCH_DIR===1)?-1:1; },{capture:true});
+cv.addEventListener('pointerdown',e=>{ if(mode!=='walk') return; drag={x:e.clientX,y:e.clientY,id:e.pointerId,s:(e.pointerType==='touch'?-TOUCH_DIR:1)}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove',e=>{ if(!drag||drag.id!==e.pointerId) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; yaw-=drag.s*dx*0.0045; pitch=THREE.MathUtils.clamp(pitch-drag.s*dy*0.0035,-1.3,1.3); applyRig(); });
 cv.addEventListener('pointerup',e=>{ if(drag&&drag.id===e.pointerId) drag=null; });
 cv.addEventListener('dblclick',e=>{ if(mode!=='aerial') return; const rc=new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),aerial);
  const pl=new THREE.Plane(new THREE.Vector3(0,1,0),0); const hit=new THREE.Vector3(); if(rc.ray.intersectPlane(pl,hit)){ const x=hit.x,y=-hit.z; if(goto(x,y)){ const d=W2T(x,y).sub(aerial.position); yaw=Math.atan2(-d.x,-d.z); pitch=-0.05; applyRig(); setMode('walk'); } } });
@@ -313,6 +317,6 @@ renderer.setAnimationLoop(()=>{
 if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
 await setLightMode(MODE0);
 $('load').remove(); window.__v3.ready=true;
-window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.touchDir=()=>({TOUCH_DIR,orbitRot:orbit.rotateSpeed}); window.__v3.vrp=()=>({vis:vrPanel.visible,attached:!!vrPanel.parent,btns:vrBtns.length}); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
 </script>
 </body></html>
