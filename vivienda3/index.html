@@ -12,6 +12,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#cfdbe6;font-family:sy
 .b{background:#fffef9;border:1px solid #bbb;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-height:40px;color:#222}
 .b:hover{background:#f3e7d6}.b.on{background:#a7784a;color:#fff;border-color:#8a6036}
 #top{display:flex;gap:6px;flex-wrap:wrap}
+#modes{display:flex;gap:6px}#modes .b{font-weight:600}#modes .b.on{background:#2d4a6a;border-color:#1d3550;color:#fff}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000b;color:#fff;padding:8px 14px;border-radius:8px;z-index:30;font-size:14px;display:none}
 #panel{background:#fffef9;border:1px solid #ddd;border-radius:12px;padding:10px;overflow:auto;box-shadow:0 5px 24px #0003;font-size:13px;color:#222}
 #panel[hidden]{display:none}#panel h1{font-size:15px;margin:2px 4px 8px}
 #panel h2{font-size:13px;margin:10px 4px 6px;color:#6a4a2a}
@@ -38,11 +40,12 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <canvas id="c"></canvas>
 <div id="ui">
  <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
+ <div id="modes"><button class="b m" data-m="dia">☀️ Día</button><button class="b m" data-m="atard">🌅 Atardecer</button><button class="b m" data-m="noche">🌙 Noche</button></div>
  <section id="panel" hidden>
   <h1>Vivienda 3 · Opción 5</h1>
   <h2>Ir a una estancia</h2><div class="grid" id="rooms"></div>
   <h2>Realidad virtual</h2><div id="vrslot"></div>
-  <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo o pellizco: teletransporte apuntando al suelo · stick izquierdo: andar · stick derecho: girar 30° · botón B/Y: siguiente estancia.</p>
+  <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo o pellizco: teletransporte apuntando al suelo · stick izquierdo: andar · stick derecho: girar 30° · botón B/Y: siguiente estancia · botón A/X o el panel de la muñeca izquierda: Día / Atardecer / Noche.</p>
   <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
   <h2>Controles</h2>
   <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
@@ -51,6 +54,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
  </section>
 </div>
 <div id="mm"><div><span id="mmroom">Planta baja</span><span>N ↑</span></div><canvas id="mmc"></canvas></div>
+<div id="toast"></div>
 <div id="hint">Cargando…</div>
 <div id="joy"><div id="knob"></div></div>
 <section id="plan" hidden><div id="ptools"><span id="ptitle">Plano detallado</span>
@@ -69,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_0f68b4b1d734.json')).json();
+const CFG=await (await fetch('config_661ee943bcb9.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -88,24 +92,29 @@ function resetAerial(){aerial.position.copy(W2T(-8,-14,17)); orbit.target.copy(W
 resetAerial();
 // ---------------------------------------------------------------- cielo
 const texL=new THREE.TextureLoader();
-const sky=await texL.loadAsync(CFG.sky); sky.mapping=THREE.EquirectangularReflectionMapping; sky.colorSpace=THREE.SRGBColorSpace;
-scene.background=sky; scene.backgroundIntensity=1.0;
-const pmrem=new THREE.PMREMGenerator(renderer); const envRT=pmrem.fromEquirectangular(sky); scene.environment=envRT.texture;
+const pmrem=new THREE.PMREMGenerator(renderer); const SKY={};
+async function getSky(k){ if(SKY[k]) return SKY[k]; const t=await texL.loadAsync(CFG.skies[k]); t.mapping=THREE.EquirectangularReflectionMapping; t.colorSpace=THREE.SRGBColorSpace; SKY[k]={tex:t,env:pmrem.fromEquirectangular(t).texture}; return SKY[k]; }
 setLoad(0.1,'Cargando modelo…');
 // ---------------------------------------------------------------- lightmaps y materiales
 const SPECK=1/(Math.PI*1.4);
 const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
- .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT * lightMapIntensity; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
+ .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lpT=texture2D(uLampMap,vLightMapUv).rgb; vec3 lightMapIrradiance = lmT*lmT*lmT*uBaseK + lpT*lpT*lpT*uLampK; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
  .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
-function patch(m){ m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.fragmentShader='uniform float uSpecK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lm3'; }
-const lmTex={}; let nlm=0;
-await Promise.all(Object.entries(V.lm).map(async([z,f])=>{const t=await texL.loadAsync(f); t.flipY=false; t.colorSpace=THREE.NoColorSpace; t.channel=1; t.anisotropy=1; lmTex[z]=t; setLoad(0.1+0.3*(++nlm)/Object.keys(V.lm).length);}));
+const ZU={}; // uniformes compartidos por zona
+function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)},uLampK:{value:new THREE.Vector3(0,0,0)},uLampMap:{value:null}}); }
+function patch(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.uniforms.uLampK=U.uLampK; sh.uniforms.uLampMap=U.uLampMap; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK; uniform vec3 uLampK; uniform sampler2D uLampMap;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lm3'; }
+const LMT={}; // LMT[set][zona] = textura
+async function loadSet(set,prog){ if(LMT[set]) return LMT[set]; const E=Object.entries(V.lm[set]); let n=0; const out={};
+ await Promise.all(E.map(async([z,f])=>{const t=await texL.loadAsync(f); t.flipY=false; t.colorSpace=THREE.NoColorSpace; t.channel=1; t.anisotropy=1; out[z]=t; if(prog) prog(++n/E.length);}));
+ return LMT[set]=out; }
+const MODE0=(P.get('modo')&&CFG.modes[P.get('modo')])?P.get('modo'):'dia';
+await loadSet(CFG.modes[MODE0].base,f=>setLoad(0.1+0.3*f)); if(CFG.modes[MODE0].lamp) await loadSet('lamp');
 const ktx=new KTX2Loader().setTranscoderPath('lib/addons/libs/basis/').detectSupport(renderer);
 const loader=new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder); loader.setKTX2Loader(ktx);
 const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.4+0.5*e.loaded/e.total);});
 setLoad(0.92,'Preparando…');
 const house=gltf.scene; scene.add(house);
-let mirrors=[], ntri=0, ndraw=0; const matCache=new Map();
+let mirrors=[], ntri=0, ndraw=0; const matCache=new Map(); const emisMats=[], zoneMats=[]; let water=null;
 house.traverse(o=>{
  if(!o.isMesh) return; ndraw++; ntri+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;
  let p=o, zn=null; while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name;break;} p=p.parent; }
@@ -113,18 +122,40 @@ house.traverse(o=>{
  o.matrixAutoUpdate=false; o.updateMatrix();
  if(zn&&zn.startsWith('Z_')){
   const z=zn.slice(2).split('_')[0]==='suelo'?'suelo':zn.slice(2).replace(/_\d+$/,'');
-  const key=m.uuid+z; let mm=matCache.get(key); if(!mm){ mm=m.clone(); mm.aoMap=null; mm.lightMap=lmTex[z]; mm.lightMapIntensity=Math.PI*CFG.K[z]; patch(mm); matCache.set(key,mm);} o.material=mm; const m2=mm;
+  const key=m.uuid+z; let mm=matCache.get(key); if(!mm){ mm=m.clone(); mm.aoMap=null; mm.lightMap=LMT[CFG.modes[MODE0].base][z]; mm.lightMapIntensity=1; patch(mm,z); mm.userData.zone=z; if(mm.emissiveIntensity>0&&mm.emissive&&mm.emissive.getHex()>0){mm.userData.emis0=mm.emissiveIntensity; emisMats.push(mm);} zoneMats.push(mm); matCache.set(key,mm);} o.material=mm; const m2=mm;
   if(m2.map) m2.map.anisotropy=Q==='alta'?8:4;
   o.userData.zone=z;
  } else {
-  if(mn==='vidrio'){ o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.02,transparent:true,opacity:0.10,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide}); o.renderOrder=2; }
+  if(mn==='agua'){ o.material=new THREE.MeshPhysicalMaterial({color:0x5fb8c8,metalness:0,roughness:0.04,transparent:true,opacity:0.62,envMapIntensity:1.0,depthWrite:false,emissive:0x1d6f86,emissiveIntensity:0}); o.renderOrder=2; water=o.material; }
+  else if(mn==='vidrio'){ o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.02,transparent:true,opacity:0.10,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide}); o.renderOrder=2; }
   else if(mn==='espejo'){ o.material=new THREE.MeshStandardMaterial({color:0xf2f2f2,metalness:1,roughness:0.015}); mirrors.push(o); }
  }
 });
 // suelo lejano
 const gt=await texL.loadAsync(CFG.grass); gt.colorSpace=THREE.SRGBColorSpace; gt.wrapS=gt.wrapT=THREE.RepeatWrapping; gt.repeat.set(300,300); gt.anisotropy=8;
-const far=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:gt,color:new THREE.Color().setScalar(CFG.farK)}));
-far.rotation.x=-Math.PI/2; far.position.set(10,-0.12,-6); scene.add(far);
+const farSh=new THREE.Shape([new THREE.Vector2(-290,-300),new THREE.Vector2(310,-300),new THREE.Vector2(310,300),new THREE.Vector2(-290,300)]);
+farSh.holes.push(new THREE.Path([new THREE.Vector2(-13.9,-13.9),new THREE.Vector2(-13.9,25.9),new THREE.Vector2(33.9,25.9),new THREE.Vector2(33.9,-13.9)]));
+const farG=new THREE.ShapeGeometry(farSh); { const p=farG.attributes.position, uv=farG.attributes.uv; for(let i=0;i<p.count;i++) uv.setXY(i,(p.getX(i)+290)/600,(p.getY(i)+300)/600); }
+const far=new THREE.Mesh(farG,new THREE.MeshBasicMaterial({map:gt,color:new THREE.Color().setScalar(CFG.farK)}));
+far.rotation.x=-Math.PI/2; far.position.set(0,-0.065,0); scene.add(far);
+// ---------------------------------------------------------------- modos de luz: Dia / Atardecer / Noche
+let curMode=null, modeBusy=false, mirrorsReady=false;
+function toast(t,ms=1600){ const e=$('toast'); e.textContent=t; e.style.display='block'; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display='none',ms); }
+async function setLightMode(k){
+ if(modeBusy||k===curMode) return; modeBusy=true; const M=CFG.modes[k]; if(curMode) toast('Cargando '+M.label+'…',8000);
+ const [base,lamp,S]=await Promise.all([loadSet(M.base),M.lamp?loadSet('lamp'):null,getSky(M.sky)]);
+ for(const [z,U] of Object.entries(ZU)){ const kb=Math.PI*CFG.K[M.base][z]; U.uBaseK.value.set(M.tint[0]*kb,M.tint[1]*kb,M.tint[2]*kb);
+   const kl=M.lamp?Math.PI*CFG.K.lamp[z]*M.lamp:0; U.uLampK.value.set(kl*M.lampTint[0],kl*M.lampTint[1],kl*M.lampTint[2]); U.uLampMap.value=lamp?lamp[z]:base[z]; }
+ for(const m of zoneMats) m.lightMap=base[m.userData.zone];
+ for(const m of emisMats) m.emissiveIntensity=m.userData.emis0*M.emis;
+ if(water) water.emissiveIntensity=M.pool;
+ scene.background=S.tex; scene.environment=S.env; scene.backgroundIntensity=M.bg; scene.environmentIntensity=M.env;
+ far.material.color.setRGB(M.far[0],M.far[1],M.far[2]);
+ curMode=k; document.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===k)); vrBtns.forEach(b=>b.userData.draw(b.userData.mode===k));
+ modeBusy=false; if(mirrorsReady) updateMirrors(); toast(M.label);
+ const u=new URL(location.href); u.searchParams.set('modo',k); history.replaceState(null,'',u);
+}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>setLightMode(b.dataset.m));
 // espejos: cubemap estatico renderizado una vez desde delante del espejo
 // espejos: la malla 'espejo' agrupa todos los espejos -> separar por grupos y un cubemap estatico por espejo
 function splitMirror(mo){
@@ -152,7 +183,7 @@ let mg=true; while(mg){ mg=false; for(let i=0;i<allParts.length&&!mg;i++) for(le
   const mm=new THREE.Mesh(ng,new THREE.MeshStandardMaterial({color:0xeeeeee,metalness:1,roughness:0.0,envMap:rt.texture,envMapIntensity:1})); mm.visible=false; scene.add(mm);
   mirrorInfo.push({mm,cc,room:(roomAt(c.x+n.x*0.4,-(c.z+n.z*0.4))||{}).name}); }
 }
-function updateMirrors(){ for(const m of mirrorInfo){ const e=renderer.toneMappingExposure; renderer.toneMappingExposure=1; m.cc.update(renderer,scene); m.mm.visible=true; renderer.toneMappingExposure=e; } }
+function updateMirrors(){ mirrorsReady=true; for(const m of mirrorInfo){ m.mm.visible=false; m.cc.update(renderer,scene); m.mm.visible=true; } }
 // ---------------------------------------------------------------- colisiones (rectangulos en planta)
 const RECTS=CFG.collide.rects, RAD=0.22;
 function blocked(x,y){ for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; } return false; }
@@ -198,12 +229,20 @@ for(let i=0;i<2;i++){
  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,0,-1)]),new THREE.LineBasicMaterial({color:0x44aaff})); line.scale.z=6; line.visible=false; c.add(line);
  c.userData={line,sel:false};
  c.addEventListener('selectstart',()=>{c.userData.sel=true; line.visible=true;});
- c.addEventListener('selectend',()=>{c.userData.sel=false; line.visible=false; if(tmark.visible&&tmark.userData.ok){ const x=tmark.position.x,y=-tmark.position.z; const hp=new THREE.Vector3(); camera.getWorldPosition(hp); const off=new THREE.Vector3().subVectors(hp,rig.position); pos.set(x-off.x,y+off.z); applyRig(); } tmark.visible=false;});
- c.addEventListener('connected',e=>{c.userData.src=e.data;});
+ c.addEventListener('selectend',()=>{c.userData.sel=false; line.visible=false; const hb=vrHit(c); if(hb){ setLightMode(hb.userData.mode); tmark.visible=false; return; } if(tmark.visible&&tmark.userData.ok){ const x=tmark.position.x,y=-tmark.position.z; const hp=new THREE.Vector3(); camera.getWorldPosition(hp); const off=new THREE.Vector3().subVectors(hp,rig.position); pos.set(x-off.x,y+off.z); applyRig(); } tmark.visible=false;});
+ c.addEventListener('connected',e=>{c.userData.src=e.data; if(e.data.handedness==='left'){ c.add(vrPanel); vrPanel.visible=true; }});
  const g=renderer.xr.getControllerGrip(i); g.add(cmf.createControllerModel(g)); rig.add(g);
  ctrls.push(c);
 }
 let turnCD=0, btnPrev={};
+// panel de modos de luz en VR (muñeca izquierda); se pulsa apuntando con el rayo y gatillo/pellizco
+const vrPanel=new THREE.Group(); const vrBtns=[];
+Object.entries({dia:'☀ Día',atard:'Atardecer',noche:'☾ Noche'}).forEach(([k,t],i)=>{ const c=document.createElement('canvas'); c.width=256; c.height=96; const g=c.getContext('2d');
+ const draw=on=>{g.fillStyle=on?'#2d4a6a':'#fffef9'; g.fillRect(0,0,256,96); g.strokeStyle='#333'; g.lineWidth=6; g.strokeRect(3,3,250,90); g.fillStyle=on?'#fff':'#222'; g.font='bold 40px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,128,50); tx.needsUpdate=true;};
+ const tx=new THREE.CanvasTexture(c); tx.colorSpace=THREE.SRGBColorSpace; const m=new THREE.Mesh(new THREE.PlaneGeometry(0.09,0.034),new THREE.MeshBasicMaterial({map:tx,toneMapped:false}));
+ m.position.set(0,0.045-i*0.04,0); m.userData={mode:k,draw}; draw(false); vrPanel.add(m); vrBtns.push(m); });
+vrPanel.position.set(0,0.06,-0.05); vrPanel.rotation.x=-0.6; vrPanel.visible=false;
+function vrHit(c){ const m=c.matrixWorld; const o=new THREE.Vector3().setFromMatrixPosition(m); const d=new THREE.Vector3(0,0,-1).transformDirection(m); const r=new THREE.Raycaster(o,d,0,3); const h=r.intersectObjects(vrBtns,false); return h.length?h[0].object:null; }
 renderer.xr.addEventListener('sessionstart',()=>{document.body.classList.add('xr'); if(mode==='aerial'){const r=CFG.rooms[0]; pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-90);} mode='walk'; pitch=0; camera.rotation.set(0,0,0); applyRig();});
 renderer.xr.addEventListener('sessionend',()=>{document.body.classList.remove('xr'); applyRig();});
 const rc=new THREE.Raycaster(); const floorPl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
@@ -222,6 +261,7 @@ function xrUpdate(dt){
      // girar alrededor de la cabeza
      const off=new THREE.Vector3().subVectors(hw,rig.position).applyAxisAngle(new THREE.Vector3(0,1,0),a); const np=new THREE.Vector3().subVectors(hw,off); pos.set(np.x,-np.z); applyRig(); turnCD=0.35; } if(Math.abs(sx)<0.3) turnCD=0; }
   const b=gp.buttons[5]; const k=hand+'b'; if(b&&b.pressed&&!btnPrev[k]){ ri=(ri+1)%CFG.rooms.length; const r=CFG.rooms[ri]; pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-90); applyRig(); } btnPrev[k]=b&&b.pressed;
+  const a=gp.buttons[4]; const ka=hand+'a'; if(a&&a.pressed&&!btnPrev[ka]){ const L=Object.keys(CFG.modes); setLightMode(L[(L.indexOf(curMode)+1)%L.length]); } btnPrev[ka]=a&&a.pressed;
  }
 }
 let ri=0;
@@ -251,7 +291,7 @@ pc.addEventListener('wheel',e=>{e.preventDefault(); const p=ppos(e); pzoom(Math.
 addEventListener('resize',()=>{ renderer.setSize(innerWidth,innerHeight); camera.aspect=aerial.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); aerial.updateProjectionMatrix(); if(!$('plan').hidden) pfit(); });
 // ---------------------------------------------------------------- bucle
 let expo=1; const clock=new THREE.Clock(); let fpsN=0,fpsT=0; window.__v3={fps:0,ndraw,ntri:Math.round(ntri),errors:[],scene};
-function zoneExpo(){ if(mode==='aerial'&&!renderer.xr.isPresenting) return CFG.expo.exterior; const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const r=roomAt(hw.x,-hw.z); return r?(CFG.expo[r.name]??CFG.expo.exterior):CFG.expo.exterior; }
+function zoneExpo(){ const E=CFG.expo[curMode]||CFG.expo.dia; if(mode==='aerial'&&!renderer.xr.isPresenting) return E.exterior; const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const r=roomAt(hw.x,-hw.z); return r?(E[r.name]??E.interior??E.exterior):E.exterior; }
 let frameN=0;
 renderer.setAnimationLoop(()=>{
  if(++frameN===3) updateMirrors();
@@ -271,7 +311,8 @@ renderer.setAnimationLoop(()=>{
 });
 // vista inicial
 if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
+await setLightMode(MODE0);
 $('load').remove(); window.__v3.ready=true;
-window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
 </script>
 </body></html>
