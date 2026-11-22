@@ -69,7 +69,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_50b6144696ac.json')).json();
+const CFG=await (await fetch('config_0f68b4b1d734.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -126,10 +126,33 @@ const gt=await texL.loadAsync(CFG.grass); gt.colorSpace=THREE.SRGBColorSpace; gt
 const far=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:gt,color:new THREE.Color().setScalar(CFG.farK)}));
 far.rotation.x=-Math.PI/2; far.position.set(10,-0.12,-6); scene.add(far);
 // espejos: cubemap estatico renderizado una vez desde delante del espejo
-for(const mo of mirrors){ const bb=new THREE.Box3().setFromObject(mo); const c=bb.getCenter(new THREE.Vector3());
- const s=bb.getSize(new THREE.Vector3()); const n=s.x<s.z?new THREE.Vector3(1,0,0):new THREE.Vector3(0,0,1); if(!roomAt(c.x+n.x*0.4,-(c.z+n.z*0.4))) n.negate();
- const rt=new THREE.WebGLCubeRenderTarget(256,{type:THREE.HalfFloatType}); const cc=new THREE.CubeCamera(0.05,50,rt); cc.position.copy(c).addScaledVector(n,1.2); cc.position.y=1.55; scene.add(cc);
- mo.visible=false; renderer.toneMappingExposure=1; cc.update(renderer,scene); mo.visible=true; mo.material.envMap=rt.texture; mo.material.envMapIntensity=1; }
+// espejos: la malla 'espejo' agrupa todos los espejos -> separar por grupos y un cubemap estatico por espejo
+function splitMirror(mo){
+ const g0=mo.geometry.index?mo.geometry.toNonIndexed():mo.geometry.clone(); const g=new THREE.BufferGeometry();
+ for(const k of ['position','normal']){ const a=g0.attributes[k]; if(!a) continue; const f=new Float32Array(a.count*3); for(let i=0;i<a.count;i++){f[i*3]=a.getX(i);f[i*3+1]=a.getY(i);f[i*3+2]=a.getZ(i);} g.setAttribute(k,new THREE.BufferAttribute(f,3)); }
+ g.applyMatrix4(mo.matrixWorld);
+ const P=g.attributes.position, N=g.attributes.normal, nt=P.count/3, cl=[];
+ for(let t=0;t<nt;t++){ const c=new THREE.Vector3(); for(let k=0;k<3;k++) c.add(new THREE.Vector3().fromBufferAttribute(P,t*3+k)); c.multiplyScalar(1/3);
+  let f=cl.find(q=>q.box.distanceToPoint(c)<0.5); if(!f){f={box:new THREE.Box3(),tris:[]}; cl.push(f);} f.box.expandByPoint(c); f.tris.push(t); }
+ let merged=true; while(merged){ merged=false; for(let i=0;i<cl.length&&!merged;i++) for(let j=i+1;j<cl.length;j++){ if(cl[i].box.clone().expandByScalar(0.3).intersectsBox(cl[j].box)){ cl[i].box.union(cl[j].box); cl[i].tris.push(...cl[j].tris); cl.splice(j,1); merged=true; break; } } }
+ return cl.map(q=>{ const pos=[],nor=[]; for(const t of q.tris) for(let k=0;k<3;k++){ const i=t*3+k; pos.push(P.getX(i),P.getY(i),P.getZ(i)); if(N) nor.push(N.getX(i),N.getY(i),N.getZ(i)); }
+  const ng=new THREE.BufferGeometry(); ng.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); if(N) ng.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3)); else ng.computeVertexNormals(); return ng; });
+}
+const mirrorInfo=[];
+house.updateMatrixWorld(true);
+let allParts=[]; for(const mo of mirrors){ allParts.push(...splitMirror(mo)); mo.parent.remove(mo); }
+for(const g of allParts) g.computeBoundingBox();
+let mg=true; while(mg){ mg=false; for(let i=0;i<allParts.length&&!mg;i++) for(let j=i+1;j<allParts.length;j++){ const A=allParts[i],B=allParts[j]; if(A.boundingBox.clone().expandByScalar(0.3).intersectsBox(B.boundingBox)){
+  const cat=k=>{const x=A.attributes[k].array,y=B.attributes[k].array,z=new Float32Array(x.length+y.length); z.set(x); z.set(y,x.length); return new THREE.BufferAttribute(z,3);};
+  const C=new THREE.BufferGeometry(); C.setAttribute('position',cat('position')); C.setAttribute('normal',cat('normal')); C.computeBoundingBox(); allParts[i]=C; allParts.splice(j,1); mg=true; break; } } }
+{ for(const ng of allParts){ ng.computeBoundingBox(); const bb=ng.boundingBox, c=bb.getCenter(new THREE.Vector3()), s=bb.getSize(new THREE.Vector3());
+  const n=s.x<s.z?new THREE.Vector3(1,0,0):new THREE.Vector3(0,0,1); if(!roomAt(c.x+n.x*0.4,-(c.z+n.z*0.4))) n.negate();
+  const rt=new THREE.WebGLCubeRenderTarget(256,{type:THREE.HalfFloatType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});
+  const cc=new THREE.CubeCamera(0.05,60,rt); cc.position.copy(c).addScaledVector(n,0.9); cc.position.y=1.55; scene.add(cc);
+  const mm=new THREE.Mesh(ng,new THREE.MeshStandardMaterial({color:0xeeeeee,metalness:1,roughness:0.0,envMap:rt.texture,envMapIntensity:1})); mm.visible=false; scene.add(mm);
+  mirrorInfo.push({mm,cc,room:(roomAt(c.x+n.x*0.4,-(c.z+n.z*0.4))||{}).name}); }
+}
+function updateMirrors(){ for(const m of mirrorInfo){ const e=renderer.toneMappingExposure; renderer.toneMappingExposure=1; m.cc.update(renderer,scene); m.mm.visible=true; renderer.toneMappingExposure=e; } }
 // ---------------------------------------------------------------- colisiones (rectangulos en planta)
 const RECTS=CFG.collide.rects, RAD=0.22;
 function blocked(x,y){ for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; } return false; }
@@ -229,7 +252,9 @@ addEventListener('resize',()=>{ renderer.setSize(innerWidth,innerHeight); camera
 // ---------------------------------------------------------------- bucle
 let expo=1; const clock=new THREE.Clock(); let fpsN=0,fpsT=0; window.__v3={fps:0,ndraw,ntri:Math.round(ntri),errors:[],scene};
 function zoneExpo(){ if(mode==='aerial'&&!renderer.xr.isPresenting) return CFG.expo.exterior; const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const r=roomAt(hw.x,-hw.z); return r?(CFG.expo[r.name]??CFG.expo.exterior):CFG.expo.exterior; }
+let frameN=0;
 renderer.setAnimationLoop(()=>{
+ if(++frameN===3) updateMirrors();
  const dt=Math.min(clock.getDelta(),0.1);
  if(renderer.xr.isPresenting) xrUpdate(dt);
  else if(mode==='walk'){ const sp=(keys.ShiftLeft||keys.ShiftRight?3.2:1.5)*dt; let f=0,s=0;
@@ -247,6 +272,6 @@ renderer.setAnimationLoop(()=>{
 // vista inicial
 if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
 $('load').remove(); window.__v3.ready=true;
-window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
 </script>
 </body></html>
