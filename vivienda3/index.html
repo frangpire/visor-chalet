@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Vivienda 3 · Visita virtual 3D y VR</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#cfdbe6;font-family:system-ui,Segoe UI,Arial,sans-serif}
+#c{position:fixed;inset:0;touch-action:none;display:block}
+#load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#eef0ec;z-index:50;font-size:18px;color:#333;gap:12px}
+#bar{width:260px;height:8px;background:#ddd;border-radius:4px;overflow:hidden}#bar i{display:block;height:100%;width:0;background:#a7784a}
+#ui{position:fixed;left:10px;top:10px;z-index:8;display:flex;flex-direction:column;gap:8px;max-width:min(330px,calc(100vw - 20px));max-height:calc(100dvh - 20px)}
+.b{background:#fffef9;border:1px solid #bbb;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-height:40px;color:#222}
+.b:hover{background:#f3e7d6}.b.on{background:#a7784a;color:#fff;border-color:#8a6036}
+#top{display:flex;gap:6px;flex-wrap:wrap}
+#panel{background:#fffef9;border:1px solid #ddd;border-radius:12px;padding:10px;overflow:auto;box-shadow:0 5px 24px #0003;font-size:13px;color:#222}
+#panel[hidden]{display:none}#panel h1{font-size:15px;margin:2px 4px 8px}
+#panel h2{font-size:13px;margin:10px 4px 6px;color:#6a4a2a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#panel p{margin:6px 4px;line-height:1.45}
+#mm{position:fixed;right:10px;top:10px;z-index:7;background:#fffd;border-radius:10px;padding:5px;width:clamp(150px,30vw,300px)}
+#mm canvas{display:block;width:100%;height:auto;cursor:crosshair;border-radius:6px}
+#mm div{font-size:12px;color:#333;padding:2px 4px;display:flex;justify-content:space-between}
+#hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#000a;color:#fff;font-size:12px;padding:6px 12px;border-radius:8px;z-index:6;text-align:center;max-width:80vw;pointer-events:none}
+#joy{position:fixed;left:24px;bottom:50px;width:120px;height:120px;border-radius:60px;background:#0003;border:2px solid #fff8;z-index:6;display:none;touch-action:none}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:25px;background:#fffc}
+#plan{position:fixed;inset:0;z-index:40;background:#e9ece4;display:flex;flex-direction:column}
+#plan[hidden]{display:none}
+#ptools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;background:#fffef9;border-bottom:1px solid #ccc}
+#ptitle{margin-right:auto;font-weight:600}
+#pc{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:grab}
+#VRButton{position:static!important;transform:none!important;width:100%!important;left:auto!important;bottom:auto!important;margin:0!important;background:#2d5a3d!important;opacity:1!important;font-size:14px!important;padding:10px!important;border-radius:9px!important;border:0!important}
+body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
+@media(max-width:700px){.b{font-size:12px;padding:6px 8px;min-height:34px}#mm{width:40vw}}
+</style>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}</script>
+</head><body>
+<div id="load"><div id="lt">Cargando la vivienda…</div><div id="bar"><i></i></div></div>
+<canvas id="c"></canvas>
+<div id="ui">
+ <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
+ <section id="panel" hidden>
+  <h1>Vivienda 3 · Opción 5</h1>
+  <h2>Ir a una estancia</h2><div class="grid" id="rooms"></div>
+  <h2>Realidad virtual</h2><div id="vrslot"></div>
+  <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo o pellizco: teletransporte apuntando al suelo · stick izquierdo: andar · stick derecho: girar 30° · botón B/Y: siguiente estancia.</p>
+  <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
+  <h2>Controles</h2>
+  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
+  <h2>Sobre el modelo</h2>
+  <p>Modelo 3D fiel a los planos «Vivienda 3 – Opción 5» (cotas y mobiliario). 212,60 m² construidos · 161,97 m² útiles. Iluminación de día precalculada con trazado de rayos (Cycles). Las alturas, materiales y la orientación (norte arriba en el plano) son supuestos: los planos solo definen la planta.</p>
+ </section>
+</div>
+<div id="mm"><div><span id="mmroom">Planta baja</span><span>N ↑</span></div><canvas id="mmc"></canvas></div>
+<div id="hint">Cargando…</div>
+<div id="joy"><div id="knob"></div></div>
+<section id="plan" hidden><div id="ptools"><span id="ptitle">Plano detallado</span>
+ <button class="b" data-p="0">Modelo + cotas</button><button class="b" data-p="1">Plano original: cotas</button><button class="b" data-p="2">Plano original: mobiliario</button>
+ <button class="b" id="pplus">＋</button><button class="b" id="pminus">－</button><button class="b" id="pfit">Encajar</button><button class="b" id="pclose">Cerrar ✕</button></div>
+ <canvas id="pc"></canvas></section>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {KTX2Loader} from 'three/addons/loaders/KTX2Loader.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {VRButton} from 'three/addons/webxr/VRButton.js';
+import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
+const $=id=>document.getElementById(id);
+const P=new URLSearchParams(location.search);
+const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
+const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
+const CFG=await (await fetch('config_50b6144696ac.json')).json();
+const V=CFG[Q];
+const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
+const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
+// ---------------------------------------------------------------- renderer / escena
+const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,Q==='alta'?1.6:1.25)); renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.AgXToneMapping; renderer.toneMappingExposure=1;
+renderer.xr.enabled=true; renderer.xr.setReferenceSpaceType('local-floor'); renderer.xr.setFoveation(1);
+if(renderer.xr.setFramebufferScaleFactor) renderer.xr.setFramebufferScaleFactor(Q==='alta'?1.0:1.0);
+const scene=new THREE.Scene();
+const rig=new THREE.Group(); scene.add(rig);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,1500); camera.position.set(0,1.62,0); rig.add(camera);
+const aerial=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,2000);
+const orbit=new OrbitControls(aerial,renderer.domElement); orbit.enableDamping=true; orbit.maxPolarAngle=Math.PI*0.47; orbit.minDistance=4; orbit.maxDistance=90;
+function resetAerial(){aerial.position.copy(W2T(-8,-14,17)); orbit.target.copy(W2T(10,6,0)); orbit.update();}
+resetAerial();
+// ---------------------------------------------------------------- cielo
+const texL=new THREE.TextureLoader();
+const sky=await texL.loadAsync(CFG.sky); sky.mapping=THREE.EquirectangularReflectionMapping; sky.colorSpace=THREE.SRGBColorSpace;
+scene.background=sky; scene.backgroundIntensity=1.0;
+const pmrem=new THREE.PMREMGenerator(renderer); const envRT=pmrem.fromEquirectangular(sky); scene.environment=envRT.texture;
+setLoad(0.1,'Cargando modelo…');
+// ---------------------------------------------------------------- lightmaps y materiales
+const SPECK=1/(Math.PI*1.4);
+const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
+ .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT * lightMapIntensity; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
+ .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
+function patch(m){ m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.fragmentShader='uniform float uSpecK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lm3'; }
+const lmTex={}; let nlm=0;
+await Promise.all(Object.entries(V.lm).map(async([z,f])=>{const t=await texL.loadAsync(f); t.flipY=false; t.colorSpace=THREE.NoColorSpace; t.channel=1; t.anisotropy=1; lmTex[z]=t; setLoad(0.1+0.3*(++nlm)/Object.keys(V.lm).length);}));
+const ktx=new KTX2Loader().setTranscoderPath('lib/addons/libs/basis/').detectSupport(renderer);
+const loader=new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder); loader.setKTX2Loader(ktx);
+const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.4+0.5*e.loaded/e.total);});
+setLoad(0.92,'Preparando…');
+const house=gltf.scene; scene.add(house);
+let mirrors=[], ntri=0, ndraw=0; const matCache=new Map();
+house.traverse(o=>{
+ if(!o.isMesh) return; ndraw++; ntri+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;
+ let p=o, zn=null; while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name;break;} p=p.parent; }
+ const m=o.material; const mn=(m.name||'').split('.')[0];
+ o.matrixAutoUpdate=false; o.updateMatrix();
+ if(zn&&zn.startsWith('Z_')){
+  const z=zn.slice(2).split('_')[0]==='suelo'?'suelo':zn.slice(2).replace(/_\d+$/,'');
+  const key=m.uuid+z; let mm=matCache.get(key); if(!mm){ mm=m.clone(); mm.aoMap=null; mm.lightMap=lmTex[z]; mm.lightMapIntensity=Math.PI*CFG.K[z]; patch(mm); matCache.set(key,mm);} o.material=mm; const m2=mm;
+  if(m2.map) m2.map.anisotropy=Q==='alta'?8:4;
+  o.userData.zone=z;
+ } else {
+  if(mn==='vidrio'){ o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.02,transparent:true,opacity:0.10,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide}); o.renderOrder=2; }
+  else if(mn==='espejo'){ o.material=new THREE.MeshStandardMaterial({color:0xf2f2f2,metalness:1,roughness:0.015}); mirrors.push(o); }
+ }
+});
+// suelo lejano
+const gt=await texL.loadAsync(CFG.grass); gt.colorSpace=THREE.SRGBColorSpace; gt.wrapS=gt.wrapT=THREE.RepeatWrapping; gt.repeat.set(300,300); gt.anisotropy=8;
+const far=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({map:gt,color:new THREE.Color().setScalar(CFG.farK)}));
+far.rotation.x=-Math.PI/2; far.position.set(10,-0.12,-6); scene.add(far);
+// espejos: cubemap estatico renderizado una vez desde delante del espejo
+for(const mo of mirrors){ const bb=new THREE.Box3().setFromObject(mo); const c=bb.getCenter(new THREE.Vector3());
+ const s=bb.getSize(new THREE.Vector3()); const n=s.x<s.z?new THREE.Vector3(1,0,0):new THREE.Vector3(0,0,1); if(!roomAt(c.x+n.x*0.4,-(c.z+n.z*0.4))) n.negate();
+ const rt=new THREE.WebGLCubeRenderTarget(256,{type:THREE.HalfFloatType}); const cc=new THREE.CubeCamera(0.05,50,rt); cc.position.copy(c).addScaledVector(n,1.2); cc.position.y=1.55; scene.add(cc);
+ mo.visible=false; renderer.toneMappingExposure=1; cc.update(renderer,scene); mo.visible=true; mo.material.envMap=rt.texture; mo.material.envMapIntensity=1; }
+// ---------------------------------------------------------------- colisiones (rectangulos en planta)
+const RECTS=CFG.collide.rects, RAD=0.22;
+function blocked(x,y){ for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; } return false; }
+function roomAt(x,y){ for(const r of CFG.rooms){ for(const q of r.rects){ if(x>=q[0]&&x<=q[2]&&y>=q[1]&&y<=q[3]) return r; } } return null; }
+// ---------------------------------------------------------------- navegacion
+let mode='aerial'; let yaw=0,pitch=0; const EYE=1.62; const keys={};
+const pos=new THREE.Vector2(10,0.8); // posicion en planta (X,Y)
+function applyRig(){ rig.position.copy(W2T(pos.x,pos.y,0)); rig.rotation.set(0,yaw,0); if(!renderer.xr.isPresenting){camera.position.set(0,EYE,0); camera.rotation.set(pitch,0,0,'YXZ');} }
+function setMode(m){ mode=m; $('baer').classList.toggle('on',m==='aerial'); $('bwalk').classList.toggle('on',m==='walk'); orbit.enabled=(m==='aerial'); $('joy').style.display=(m==='walk'&&isTouch)?'block':'none';
+ $('hint').textContent=m==='aerial'?'Vista aérea · arrastra para girar · doble clic en el suelo para entrar andando':'Pasear · W A S D / flechas · arrastra para mirar'+(isTouch?' · joystick para andar':''); }
+function goRoom(r){ pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-90); pitch=-0.08; applyRig(); setMode('walk'); }
+function goto(x,y){ if(blocked(x,y)) return false; pos.set(x,y); applyRig(); return true; }
+const rb=$('rooms'); for(const r of CFG.rooms){ const b=document.createElement('button'); b.className='b'; b.textContent=r.name; b.onclick=()=>{goRoom(r); $('panel').hidden=true;}; rb.appendChild(b); }
+$('bopt').onclick=()=>{$('panel').hidden=!$('panel').hidden;};
+$('baer').onclick=()=>{resetAerial(); setMode('aerial');};
+$('bwalk').onclick=()=>goRoom(CFG.rooms[0]);
+document.querySelectorAll('[data-q]').forEach(b=>{b.classList.toggle('on',b.dataset.q===Q); b.onclick=()=>{const u=new URL(location.href); u.searchParams.set('q',b.dataset.q); location.href=u;};});
+addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='Escape'){$('plan').hidden=true;}}); addEventListener('keyup',e=>{keys[e.code]=false;});
+// mirar con arrastre
+let drag=null; const cv=renderer.domElement;
+cv.addEventListener('pointerdown',e=>{ if(mode!=='walk') return; drag={x:e.clientX,y:e.clientY,id:e.pointerId}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove',e=>{ if(!drag||drag.id!==e.pointerId) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; yaw-=dx*0.0045; pitch=THREE.MathUtils.clamp(pitch-dy*0.0035,-1.3,1.3); applyRig(); });
+cv.addEventListener('pointerup',e=>{ if(drag&&drag.id===e.pointerId) drag=null; });
+cv.addEventListener('dblclick',e=>{ if(mode!=='aerial') return; const rc=new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),aerial);
+ const pl=new THREE.Plane(new THREE.Vector3(0,1,0),0); const hit=new THREE.Vector3(); if(rc.ray.intersectPlane(pl,hit)){ const x=hit.x,y=-hit.z; if(goto(x,y)){ const d=W2T(x,y).sub(aerial.position); yaw=Math.atan2(-d.x,-d.z); pitch=-0.05; applyRig(); setMode('walk'); } } });
+// joystick tactil
+const joy=$('joy'), knob=$('knob'); let jv={x:0,y:0}, jid=null;
+joy.addEventListener('pointerdown',e=>{jid=e.pointerId; joy.setPointerCapture(jid); e.stopPropagation(); jmove(e);});
+joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) jmove(e); });
+const jend=()=>{jid=null; jv={x:0,y:0}; knob.style.left='35px'; knob.style.top='35px';};
+joy.addEventListener('pointerup',jend); joy.addEventListener('pointercancel',jend);
+function jmove(e){ const r=joy.getBoundingClientRect(); let x=(e.clientX-r.left-60)/50, y=(e.clientY-r.top-60)/50; const L=Math.hypot(x,y); if(L>1){x/=L;y/=L;} jv={x,y}; knob.style.left=(35+x*40)+'px'; knob.style.top=(35+y*40)+'px'; }
+function move(dx,dy){ // dx,dy en planta
+ const nx=pos.x+dx, ny=pos.y+dy;
+ if(!blocked(nx,ny)) pos.set(nx,ny); else if(!blocked(nx,pos.y)) pos.x=nx; else if(!blocked(pos.x,ny)) pos.y=ny;
+}
+// ---------------------------------------------------------------- VR
+$('vrslot').appendChild(VRButton.createButton(renderer));
+const cmf=new XRControllerModelFactory(); const ctrls=[];
+const tmark=new THREE.Mesh(new THREE.RingGeometry(0.18,0.24,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x44aaff,transparent:true,opacity:0.85,depthTest:false})); tmark.visible=false; tmark.renderOrder=9; scene.add(tmark);
+for(let i=0;i<2;i++){
+ const c=renderer.xr.getController(i); rig.add(c);
+ const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,0,-1)]),new THREE.LineBasicMaterial({color:0x44aaff})); line.scale.z=6; line.visible=false; c.add(line);
+ c.userData={line,sel:false};
+ c.addEventListener('selectstart',()=>{c.userData.sel=true; line.visible=true;});
+ c.addEventListener('selectend',()=>{c.userData.sel=false; line.visible=false; if(tmark.visible&&tmark.userData.ok){ const x=tmark.position.x,y=-tmark.position.z; const hp=new THREE.Vector3(); camera.getWorldPosition(hp); const off=new THREE.Vector3().subVectors(hp,rig.position); pos.set(x-off.x,y+off.z); applyRig(); } tmark.visible=false;});
+ c.addEventListener('connected',e=>{c.userData.src=e.data;});
+ const g=renderer.xr.getControllerGrip(i); g.add(cmf.createControllerModel(g)); rig.add(g);
+ ctrls.push(c);
+}
+let turnCD=0, btnPrev={};
+renderer.xr.addEventListener('sessionstart',()=>{document.body.classList.add('xr'); if(mode==='aerial'){const r=CFG.rooms[0]; pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-90);} mode='walk'; pitch=0; camera.rotation.set(0,0,0); applyRig();});
+renderer.xr.addEventListener('sessionend',()=>{document.body.classList.remove('xr'); applyRig();});
+const rc=new THREE.Raycaster(); const floorPl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function xrUpdate(dt){
+ const s=renderer.xr.getSession(); if(!s) return;
+ // teletransporte
+ tmark.visible=false;
+ for(const c of ctrls){ if(!c.userData.sel) continue; const m=c.matrixWorld; const o=new THREE.Vector3().setFromMatrixPosition(m); const d=new THREE.Vector3(0,0,-1).transformDirection(m);
+  rc.ray.set(o,d); const h=new THREE.Vector3(); if(rc.ray.intersectPlane(floorPl,h)&&o.distanceTo(h)<25){ const ok=!blocked(h.x,-h.z); tmark.position.copy(h).setY(0.02); tmark.visible=true; tmark.userData.ok=ok; tmark.material.color.set(ok?0x44aaff:0xff4444); c.userData.line.scale.z=o.distanceTo(h);} }
+ for(const src of s.inputSources){ const gp=src.gamepad; if(!gp) continue; const ax=gp.axes; const hand=src.handedness;
+  const sx=ax.length>=4?ax[2]:ax[0]||0, sy=ax.length>=4?ax[3]:ax[1]||0;
+  if(hand==='left'&&Math.hypot(sx,sy)>0.15){ const hp=new THREE.Quaternion(); camera.getWorldQuaternion(hp); const f=new THREE.Vector3(0,0,-1).applyQuaternion(hp); f.y=0; f.normalize(); const r=new THREE.Vector3(1,0,0).applyQuaternion(hp); r.y=0; r.normalize();
+   const v=f.multiplyScalar(-sy).add(r.multiplyScalar(sx)).multiplyScalar(1.6*dt); const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const hx=hw.x+v.x, hy=-(hw.z+v.z);
+   if(!blocked(hx,hy)){pos.x+=v.x; pos.y-=v.z;} else if(!blocked(hx,-hw.z)) pos.x+=v.x; else if(!blocked(hw.x,hy)) pos.y-=v.z; applyRig(); }
+  if(hand==='right'){ turnCD-=dt; if(Math.abs(sx)>0.6&&turnCD<=0){ const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const a=-Math.sign(sx)*Math.PI/6; yaw+=a;
+     // girar alrededor de la cabeza
+     const off=new THREE.Vector3().subVectors(hw,rig.position).applyAxisAngle(new THREE.Vector3(0,1,0),a); const np=new THREE.Vector3().subVectors(hw,off); pos.set(np.x,-np.z); applyRig(); turnCD=0.35; } if(Math.abs(sx)<0.3) turnCD=0; }
+  const b=gp.buttons[5]; const k=hand+'b'; if(b&&b.pressed&&!btnPrev[k]){ ri=(ri+1)%CFG.rooms.length; const r=CFG.rooms[ri]; pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-90); applyRig(); } btnPrev[k]=b&&b.pressed;
+ }
+}
+let ri=0;
+// ---------------------------------------------------------------- minimapa
+const PM=CFG.plan; const mmc=$('mmc'), mx=mmc.getContext('2d'); const mmImg=new Image(); mmImg.src=CFG.minimap;
+await mmImg.decode(); mmc.width=mmImg.naturalWidth; mmc.height=mmImg.naturalHeight;
+const toMM=(x,y)=>[(x-PM.X0)/(PM.X1-PM.X0)*mmc.width,(PM.Y1-y)/(PM.Y1-PM.Y0)*mmc.height];
+function drawMM(){ mx.drawImage(mmImg,0,0); let x,y,a; if(mode==='aerial'&&!renderer.xr.isPresenting){ x=orbit.target.x; y=-orbit.target.z; a=null; } else { const hw=new THREE.Vector3(); camera.getWorldPosition(hw); x=hw.x; y=-hw.z; const d=new THREE.Vector3(); camera.getWorldDirection(d); a=Math.atan2(-d.z,d.x); }
+ const [px,py]=toMM(x,y); mx.save(); mx.translate(px,py); if(a!==null){ mx.rotate(-a); mx.fillStyle='rgba(220,60,30,0.35)'; mx.beginPath(); mx.moveTo(0,0); mx.arc(0,0,38,-0.5,0.5); mx.fill(); }
+ mx.fillStyle='#d23'; mx.strokeStyle='#fff'; mx.lineWidth=3; mx.beginPath(); mx.arc(0,0,9,0,7); mx.fill(); mx.stroke(); mx.restore();
+ const r=roomAt(x,y); $('mmroom').textContent=r?r.name:'Exterior'; }
+mmc.addEventListener('click',e=>{ const rr=mmc.getBoundingClientRect(); const x=PM.X0+(e.clientX-rr.left)/rr.width*(PM.X1-PM.X0), y=PM.Y1-(e.clientY-rr.top)/rr.height*(PM.Y1-PM.Y0); if(goto(x,y)) setMode('walk'); else $('hint').textContent='Ese punto está ocupado (muro o mueble).'; });
+// ---------------------------------------------------------------- plano a pantalla completa (zoom y desplazamiento)
+const pc=$('pc'), px=pc.getContext('2d'); const planImgs=CFG.plans.map(f=>{const i=new Image(); i.src=f; return i;}); let pi=0, ps=1, pox=0, poy=0; const ptr=new Map();
+function pdraw(){ const d=Math.min(devicePixelRatio,2); const r=pc.getBoundingClientRect(); pc.width=r.width*d; pc.height=r.height*d; px.setTransform(d,0,0,d,0,0); px.fillStyle='#e9ece4'; px.fillRect(0,0,r.width,r.height); const I=planImgs[pi]; if(I.complete) px.drawImage(I,pox,poy,I.naturalWidth*ps,I.naturalHeight*ps);
+ if(pi===0&&I.complete){ const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const sx=(hw.x-PM.X0)/(PM.X1-PM.X0)*I.naturalWidth*ps+pox, sy=(PM.Y1+hw.z)/(PM.Y1-PM.Y0)*I.naturalHeight*ps+poy; if(mode==='walk'){px.fillStyle='#d23'; px.beginPath(); px.arc(sx,sy,7,0,7); px.fill();} } }
+function pfit(){ const I=planImgs[pi]; const r=pc.getBoundingClientRect(); if(!I.naturalWidth){I.onload=pfit;return;} ps=Math.min(r.width/I.naturalWidth,r.height/I.naturalHeight)*0.96; pox=(r.width-I.naturalWidth*ps)/2; poy=(r.height-I.naturalHeight*ps)/2; pdraw(); }
+function pzoom(f,cx,cy){ const r=pc.getBoundingClientRect(); cx??=r.width/2; cy??=r.height/2; const ns=THREE.MathUtils.clamp(ps*f,0.05,8); const k=ns/ps; pox=cx-(cx-pox)*k; poy=cy-(cy-poy)*k; ps=ns; pdraw(); }
+$('bplan').onclick=()=>{$('plan').hidden=false; pfit();}; $('pclose').onclick=()=>{$('plan').hidden=true;}; $('pfit').onclick=pfit; $('pplus').onclick=()=>pzoom(1.4); $('pminus').onclick=()=>pzoom(1/1.4);
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{pi=+b.dataset.p; document.querySelectorAll('[data-p]').forEach(c=>c.classList.toggle('on',c===b)); pfit();}); document.querySelector('[data-p="0"]').classList.add('on');
+const ppos=e=>{const r=pc.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top};};
+pc.addEventListener('pointerdown',e=>{pc.setPointerCapture(e.pointerId); ptr.set(e.pointerId,ppos(e));});
+pc.addEventListener('pointermove',e=>{ if(!ptr.has(e.pointerId)) return; const prev=[...ptr.values()]; const o=ptr.get(e.pointerId), p=ppos(e); ptr.set(e.pointerId,p); const now=[...ptr.values()];
+ if(now.length===1){pox+=p.x-o.x; poy+=p.y-o.y; pdraw();} else if(now.length===2){ const a=prev[0],b=prev[1],c=now[0],d=now[1]; const oc={x:(a.x+b.x)/2,y:(a.y+b.y)/2}, nc={x:(c.x+d.x)/2,y:(c.y+d.y)/2}; pox+=nc.x-oc.x; poy+=nc.y-oc.y; pzoom(Math.hypot(c.x-d.x,c.y-d.y)/Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),nc.x,nc.y);} });
+for(const t of ['pointerup','pointercancel']) pc.addEventListener(t,e=>ptr.delete(e.pointerId));
+pc.addEventListener('wheel',e=>{e.preventDefault(); const p=ppos(e); pzoom(Math.exp(-e.deltaY*0.0016),p.x,p.y);},{passive:false});
+addEventListener('resize',()=>{ renderer.setSize(innerWidth,innerHeight); camera.aspect=aerial.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); aerial.updateProjectionMatrix(); if(!$('plan').hidden) pfit(); });
+// ---------------------------------------------------------------- bucle
+let expo=1; const clock=new THREE.Clock(); let fpsN=0,fpsT=0; window.__v3={fps:0,ndraw,ntri:Math.round(ntri),errors:[],scene};
+function zoneExpo(){ if(mode==='aerial'&&!renderer.xr.isPresenting) return CFG.expo.exterior; const hw=new THREE.Vector3(); camera.getWorldPosition(hw); const r=roomAt(hw.x,-hw.z); return r?(CFG.expo[r.name]??CFG.expo.exterior):CFG.expo.exterior; }
+renderer.setAnimationLoop(()=>{
+ const dt=Math.min(clock.getDelta(),0.1);
+ if(renderer.xr.isPresenting) xrUpdate(dt);
+ else if(mode==='walk'){ const sp=(keys.ShiftLeft||keys.ShiftRight?3.2:1.5)*dt; let f=0,s=0;
+  if(keys.KeyW||keys.ArrowUp) f+=1; if(keys.KeyS||keys.ArrowDown) f-=1; if(keys.KeyD) s+=1; if(keys.KeyA) s-=1; if(keys.ArrowLeft) yaw+=1.8*dt; if(keys.ArrowRight) yaw-=1.8*dt;
+  f-=jv.y; s+=jv.x;
+  if(f||s){ const fx=-Math.sin(yaw), fy=Math.cos(yaw); // direccion de mirada en planta (three -z = +Y)
+   move((fx*f+Math.cos(yaw)*s)*sp,(fy*f+Math.sin(yaw)*s)*sp); }
+  applyRig(); }
+ else orbit.update();
+ const te=zoneExpo(); expo+=(te-expo)*Math.min(1,dt*2.5); renderer.toneMappingExposure=expo;
+ renderer.render(scene,(mode==='aerial'&&!renderer.xr.isPresenting)?aerial:camera);
+ if(!renderer.xr.isPresenting){ drawMM(); if(!$('plan').hidden) pdraw(); }
+ fpsN++; fpsT+=dt; if(fpsT>1){window.__v3.fps=fpsN/fpsT; fpsN=0; fpsT=0;}
+});
+// vista inicial
+if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
+$('load').remove(); window.__v3.ready=true;
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+</script>
+</body></html>
