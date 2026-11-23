@@ -49,7 +49,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
   <h2>Controles</h2>
   <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
   <h2>Sobre el modelo</h2>
-  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Luz horneada en Cycles. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
+  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Iluminación PBR con IBL y luminarias LED, sin lightmaps ruidosos. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
  </section>
 </div>
 <div id="mm"><div><span id="mmroom">Cocina</span><span>planta</span></div><canvas id="mmc"></canvas></div>
@@ -82,19 +82,26 @@ const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:true,powerPrefer
 renderer.setPixelRatio(Math.min(devicePixelRatio,Q==='alta'?1.6:1.2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.18;
+renderer.toneMapping=THREE.AgXToneMapping;
+renderer.toneMappingExposure=1.0;
 renderer.xr.enabled=true;
 renderer.xr.setReferenceSpaceType('local-floor');
 if(renderer.xr.setFoveation) renderer.xr.setFoveation(1);
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xc5ccd2);
+scene.background=new THREE.Color(0xcfd3d6);
 const pmrem=new THREE.PMREMGenerator(renderer);
-scene.environment=pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity=0.48;
-const clipCeil=new THREE.Plane(new THREE.Vector3(0,-1,0), 2.90);
-renderer.localClippingEnabled=true;
+const texL=new THREE.TextureLoader();
+const hdriName=CFG.hdri||CFG.sky||null;
+if(hdriName){
+  const ht=await texL.loadAsync(hdriName);
+  ht.mapping=THREE.EquirectangularReflectionMapping;
+  ht.colorSpace=THREE.SRGBColorSpace;
+  scene.environment=pmrem.fromEquirectangular(ht).texture;
+} else {
+  scene.environment=pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+}
+scene.environmentIntensity=0.62;
 
 const rig=new THREE.Group(); scene.add(rig);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,200);
@@ -110,66 +117,58 @@ function resetAerial(){
 }
 resetAerial();
 
-// Lightmaps on UV1 (TEXCOORD_1), cube-root decode, same method as vivienda3
-const SPECK=1/(Math.PI*1.4);
-const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
- .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT*uBaseK; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
- .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
-const ZU={};
-function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)}}); }
-function patchLM(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lmK'; }
-
-setLoad(0.10,'Cargando luz…');
-const texL=new THREE.TextureLoader();
-const LMT={};
-const lmFiles=(V.lm && (V.lm.dia||V.lm))||{};
-await Promise.all(Object.entries(lmFiles).map(async([z,f],i,arr)=>{
-  const tex=await texL.loadAsync(f);
-  tex.flipY=false; tex.colorSpace=THREE.NoColorSpace; tex.channel=1; tex.anisotropy=1;
-  LMT[z]=tex;
-}));
-
-setLoad(0.40,'Cargando modelo…');
+// PBR + IBL + puntos LED (enfoque Grandiella). Sin lightmaps ruidosos.
+setLoad(0.20,'Cargando modelo…');
 const loader=new GLTFLoader();
-const gltf=await loader.loadAsync(V.glb, e=>{ if(e.total) setLoad(0.40+0.5*e.loaded/e.total); });
+const gltf=await loader.loadAsync(V.glb, e=>{ if(e.total) setLoad(0.20+0.65*e.loaded/e.total); });
 setLoad(0.92,'Preparando…');
 const kitchen=gltf.scene; scene.add(kitchen);
-const matCache=new Map();
+const hideAerial=[];
 kitchen.traverse(o=>{
   if(!o.isMesh) return;
   o.castShadow=false; o.receiveShadow=false;
   o.matrixAutoUpdate=false; o.updateMatrix();
-  let p=o, zn=null;
-  while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name; break;} p=p.parent; }
-  if(!zn && o.name && o.name.startsWith('Z_')) zn=o.name;
-  const m=o.material; if(!m) return;
-  const mn=(m.name||'').split('.')[0];
-  if(zn && zn.startsWith('Z_') && LMT[zn.slice(2).split('.')[0]]){
-    const z=zn.slice(2).split('.')[0];
-    const key=m.uuid+z;
-    let mm=matCache.get(key);
-    if(!mm){
-      mm=m.clone();
-      mm.aoMap=null;
-      mm.lightMap=LMT[z];
-      mm.lightMapIntensity=1;
-      patchLM(mm,z);
-      mm.userData.zone=z;
-      if(mm.map) mm.map.anisotropy=Q==='alta'?8:4;
-      matCache.set(key,mm);
+  const nm=(o.name||'').toLowerCase();
+  if(nm==='ceiling'||nm.startsWith('led_')||nm.startsWith('ceil')) hideAerial.push(o);
+  const mats=Array.isArray(o.material)?o.material:[o.material];
+  o.material=mats.map(m=>{
+    if(!m) return m;
+    const n=((m.name||o.name||'')+'').toLowerCase();
+    const mm=m.clone();
+    mm.lightMap=null; mm.aoMap=null;
+    if(mm.map){ mm.map.colorSpace=THREE.SRGBColorSpace; mm.map.anisotropy=Q==='alta'?8:4; mm.map.wrapS=mm.map.wrapT=THREE.RepeatWrapping; }
+    if(n.includes('led') || n==='led'){
+      mm.emissive=new THREE.Color(0xf4f1e4);
+      mm.emissiveIntensity=0.45;
+      mm.toneMapped=true;
+    } else if(/inox|chrome|cromo|metal/.test(n)){
+      if(mm.metalness!==undefined){
+        mm.metalness=0.92;
+        mm.roughness=0.35;
+        mm.envMapIntensity=0.85;
+        if(mm.color) mm.color.setRGB(0.78,0.80,0.82);
+        mm.map=null; // color uniforme; el cepillado va en roughness si existía
+      }
+    } else if(n.includes('vidrio') || (o.name||'').startsWith('GLASS_')){
+      return new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:0.14,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide});
     }
-    o.material=mm;
-  } else if(mn==='vidrio' || o.name.startsWith('GLASS_')){
-    o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:0.14,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide});
-    o.renderOrder=2;
-  } else {
-    if(m.map) m.map.anisotropy=4;
-  }
+    return mm;
+  });
+  if(Array.isArray(o.material)&&o.material.length===1) o.material=o.material[0];
 });
-for(const [z,U] of Object.entries(ZU)){
-  const kb=Math.PI*((CFG.K&&CFG.K.dia&&CFG.K.dia[z])||(CFG.K&&CFG.K[z])||1);
-  U.uBaseK.value.set(kb,kb,kb);
+// Luces: hemisferio suave + un punto por luminaria LED de techo
+scene.add(new THREE.HemisphereLight(0xf3f4f6, 0x6a6860, 0.42));
+scene.add(new THREE.AmbientLight(0xffffff, 0.08));
+const ledPts=CFG.leds||[];
+for(const L of ledPts){
+  const pl=new THREE.PointLight(0xfff3e4, Q==='alta'?11:8, 7.5, 2);
+  pl.position.copy(B2T(L.x, L.y, (L.z||2.92)-0.06));
+  scene.add(pl);
 }
+if(!ledPts.length){
+  scene.add(new THREE.PointLight(0xfff3e4, 14, 12, 2)).position.copy(B2T(0,0,2.7));
+}
+
 
 // collisions: AABBs in Blender XY (meters)
 const RECTS=CFG.aabbs||[];
@@ -193,8 +192,7 @@ function applyRig(){
 applyRig();
 
 function setCeilingVisible(v){
-  // After the lightmap join, ceiling and LEDs are in Z_cocina/Z_camaras: clip above 2.90 m in aerial view.
-  renderer.clippingPlanes = v ? [] : [clipCeil];
+  for(const o of hideAerial) o.visible=v;
 }
 function setMode(m){
   mode=m;
