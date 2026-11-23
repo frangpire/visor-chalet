@@ -185,7 +185,8 @@ kitchen.traverse(o=>{
         else mm.roughness=0.28;
         mm.envMapIntensity=0.85;
         if(mm.color) mm.color.setRGB(0.78,0.80,0.82);
-        mm.map=null; // brillo de estudio, sin vetas de albedo
+        mm.map=null; mm.normalMap=null; mm.roughnessMap=null; mm.bumpMap=null;
+        // brillo de estudio, sin vetas de albedo ni de roughness
       }
     } else if(n.includes('vidrio') || (o.name||'').startsWith('GLASS_')){
       return new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:0.14,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide});
