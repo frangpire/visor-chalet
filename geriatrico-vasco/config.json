@@ -2288,10 +2288,10 @@
     "Tomas y desag\u00fces en la XY del DWG; la altura se toma de la cota del plano cuando existe (h \u2026 m del suelo / techo / a suelo) y, si no, de la pr\u00e1ctica habitual (anotado en fitting)."
   ],
   "mmWorld": {
-    "x0": -7.387499999999999,
-    "y0": -5.6125,
-    "x1": 7.6125,
-    "y1": 5.5625
+    "x0": -7.183410167694092,
+    "y0": -5.488170146942139,
+    "x1": 7.432459831237793,
+    "y1": 5.377630233764648
   },
   "leds": [
     {
@@ -2450,12 +2450,70 @@
     }
   ],
   "alta": {
-    "glb": "cocina_alta_39c03917aacb.glb"
+    "glb": "cocina_alta_34915ddb648e.glb",
+    "lm": {
+      "dia": {
+        "cocina": "lm_dia_cocina_3841a066e2e0.jpg"
+      },
+      "noche": {
+        "cocina": "lm_noche_cocina_f90ccfdd78a4.jpg"
+      }
+    }
   },
   "quest": {
-    "glb": "cocina_quest_39c03917aacb.glb"
+    "glb": "cocina_quest_34915ddb648e.glb",
+    "lm": {
+      "dia": {
+        "cocina": "lm_dia_cocina_9d1f4b7f767b.jpg"
+      },
+      "noche": {
+        "cocina": "lm_noche_cocina_8fb8cb84c592.jpg"
+      }
+    }
   },
-  "minimap": "minimap_ac2d59999b16.png",
+  "minimap": "minimap_50004b197ea2.png",
   "hdri": "hdri_dia_8610a4a2d6c4.jpg",
-  "plan": "plano_75c8f44507a3.jpg"
+  "plan": "plano_75c8f44507a3.jpg",
+  "skies": {
+    "dia": "hdri_dia_8610a4a2d6c4.jpg",
+    "noche": "hdri_noche_76ff0e5c473f.jpg"
+  },
+  "K": {
+    "dia": {
+      "cocina": 5.124876138593705
+    },
+    "noche": {
+      "cocina": 3.8957745904687022
+    }
+  },
+  "modes": {
+    "dia": {
+      "label": "D\u00eda",
+      "base": "dia",
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "emis": 0.7,
+      "sky": "dia",
+      "bg": "#cfd3d6",
+      "env": 0.55,
+      "expo": 1.0
+    },
+    "noche": {
+      "label": "Noche",
+      "base": "noche",
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "emis": 1.0,
+      "sky": "noche",
+      "bg": "#1a1c20",
+      "env": 0.22,
+      "expo": 0.88
+    }
+  }
 }
