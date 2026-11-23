@@ -1,13 +1,13 @@
 {
   "alta": {
-    "glb": "cocina_alta_5c03b9a42e65.glb"
+    "glb": "cocina_alta_d6ba22faf530.glb"
   },
   "quest": {
-    "glb": "cocina_quest_5c03b9a42e65.glb"
+    "glb": "cocina_quest_d6ba22faf530.glb"
   },
   "minimap": "minimap_05ec0b03d22b.png",
   "plans": [
-    "plano_dwg_6549ca20fd72.png",
+    "plano_dwg_3af9981aa31b.png",
     "plano_igr_545c0fd2da65.jpg"
   ],
   "skies": {
@@ -201,6 +201,24 @@
         0.1,
         6.45,
         0.802
+      ],
+      [
+        4.8,
+        5.32,
+        4.9,
+        7.9
+      ],
+      [
+        4.8,
+        7.8,
+        9.4,
+        7.9
+      ],
+      [
+        9.3,
+        5.22,
+        9.4,
+        7.9
       ]
     ]
   },
@@ -225,8 +243,8 @@
       "name": "Línea de cocción",
       "p": [
         3.3,
-        1.55,
-        270
+        1.7,
+        250
       ],
       "rects": [
         [
@@ -240,7 +258,7 @@
     {
       "name": "Horno",
       "p": [
-        1.8,
+        2.0,
         2.4,
         180
       ],
@@ -248,7 +266,7 @@
         [
           0.15,
           1.7,
-          2.3,
+          2.5,
           3.2
         ]
       ]
@@ -265,7 +283,7 @@
           2.2,
           1.9,
           4.3,
-          3.0
+          3.65
         ]
       ]
     },
@@ -273,13 +291,13 @@
       "name": "Lavado",
       "p": [
         2.7,
-        3.45,
+        3.15,
         90
       ],
       "rects": [
         [
           1.5,
-          3.3,
+          3.15,
           4.9,
           5.22
         ]
@@ -288,15 +306,15 @@
     {
       "name": "Frío",
       "p": [
-        6.7,
+        6.4,
         3.3,
-        0
+        20
       ],
       "rects": [
         [
-          7.9,
+          5.6,
           2.3,
-          8.95,
+          8.13,
           5.22
         ]
       ]
@@ -312,7 +330,7 @@
         [
           5.0,
           0.15,
-          8.95,
+          8.13,
           2.3
         ]
       ]
@@ -321,18 +339,23 @@
   "notes": {
     "dwg_alignment": "DWG mm -> plan m: x/1000-76.953, y/1000-1.037 (traslación del DWG importado en el SKP, identidad de rotación).",
     "horno": "El cajetín del DWG dice «HORNO 10 BANDEJAS» y hay bloques SCC 101 G (Rational 10×GN1/1). El SKP modela un iCombi Pro 6-1/1 en la misma huella (~0,85×0,97 m). Se mantiene la geometría del SKP (no hay malla 10-1/1 usable) y se anota la diferencia: misma planta, altura de máquina posiblemente menor que un 10-1/1.",
-    "cocina_fuegos": "Cajetín DWG: «COCINA 6 FUEGOS». Coincide con el SKP (Electrolux E9GCGL6C00, 6 quemadores).",
+    "cocina_fuegos": "El MTEXT del cajetín en el DWG dice «COCINA 6 FUEGOS» y el dibujo y el SKP muestran 6 quemadores (Electrolux E9GCGL6C00). La imagen raster del plano (igr3d) sigue mostrando «COCINA 5 FUEGOS» en la tabla; se sigue el DWG y el dibujo (6).",
+    "bain_marie": "En la línea de cocción, el módulo 400 mm entre frytop y freidora es un bloque ELECTROLUX-MC-BAINMARIE-400 en el DWG; el SKP lo nombra «elemento neutro» E9WTNDN000. Se mantiene la malla del SKP y se anota la diferencia.",
     "techo_led": "Capa SKP «04 Techo e iluminación» está oculta en SketchUp; se incluye en el visor. Los 8 paneles LED 600×600 no aparecen como bloques en el DWG (capa electricidad vacía). Supuesto: retícula de techo de cocina industrial del modelo SKP de Nacho.",
-    "puerta": "Puerta vaivén inox con ojo de buey en hueco oeste 0,97 m (Y 3,28–4,25). Colisión: paso libre (se empuja la vaivén). Supuesto de recorrido.",
-    "tomas": "Tomas de agua, desagüe, electricidad y gas colocadas en la posición exacta del DWG. Altura: cota Z del bloque si es razonable; si no, cota de texto más cercana («h … m del suelo» / rasante); si no, nota del plano «tomas auxiliares a 1,2 m» o rasante para desagües.",
-    "atrezo": "Tablas APPCC, verduras, ollas, cestas, menaje y extintor proceden del SKP (capa 05 Atrezo), coherentes con una cocina industrial. El extintor está en el modelo 3D; en el DWG no hay bloque de extintor (supuesto de atrezo del SKP).",
-    "mesas_extra": "Mesas Distform, estantería, elementos neutros y bases abiertas Electrolux están en el SKP y coinciden con la distribución del dibujo (no solo con la tabla de 9 equipos del cajetín)."
+    "puerta": "Puerta vaivén inox con ojo de buey en hueco oeste 0,97 m (Y 3,28–4,25), coincidente con el hueco del DWG. Colisión: paso libre (se empuja la vaivén). Supuesto de recorrido.",
+    "tomas": "Tomas de agua, desagüe, electricidad y gas solo las del recinto de cocina, en la posición XY exacta del DWG (las que el plano sitúa en el local colindante o en la leyenda no se modelan dentro). Altura: cota Z del bloque si es razonable; si no, cota de texto más cercana. Las cotas «h 2,2 m del suelo» son de extracción de campana (nota «PENDIENTE TOMAS DE EXTRACCION CAMPANA») y no se aplican a enchufes ni al gas; enchufes auxiliares a 1,2 m (nota del plano) y llave de gas a 0,30 m (supuesto). Los dos TOMA_MON de la isla van a ras de suelo, como indica el plano.",
+    "hueco_ne": "El DWG no cierra el muro norte entre X=4,80 e X=8,95 (el muro este termina en Y=5,22). Se respeta el hueco. Supuesto: el paso abre a un local anexo vacío (suelo, techo, tres muros de cierre y zócalo), sin mobiliario inventado, para no dejar el forjado contra el vacío.",
+    "atrezo": "Tablas APPCC, verduras, ollas, cestas, menaje y extintor proceden del SKP (capa 05 Atrezo), coherentes con una cocina industrial. El extintor está junto a la salida; en el DWG no hay bloque de extintor (supuesto del SKP).",
+    "senalizacion": "Supuesto de práctica habitual, no aparece en el DWG: interruptor de alumbrado en el cerco sur de la puerta (1,10 m) y señal de SALIDA sobre el dintel interior.",
+    "mesas_extra": "Mesas Distform, estantería, elementos neutros y bases abiertas Electrolux están en el SKP y coinciden con la distribución del dibujo (no solo con la tabla de 9 equipos del cajetín).",
+    "ventanas": "Ni el DWG ni el SKP tienen ventanas en este recinto; no se inventan.",
+    "luz_horneada": "Pendiente: la iluminación es PBR + IBL del HDRI del SKP (solo IBL, el HDRI es un loft y no se usa de fondo) y puntos en los 8 LED. No hay lightmaps Cycles todavía."
   },
   "bounds": [
     0,
     0,
-    9.05,
-    5.32,
+    9.4,
+    7.9,
     2.72
   ]
 }
