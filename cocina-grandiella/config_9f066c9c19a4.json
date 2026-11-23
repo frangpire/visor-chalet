@@ -1,9 +1,25 @@
 {
   "alta": {
-    "glb": "cocina_alta_d6ba22faf530.glb"
+    "glb": "cocina_alta_235f23e586d8.glb",
+    "lm": {
+      "dia": {
+        "cocina": "lm_dia_cocina_675881b80d9d.jpg"
+      },
+      "noche": {
+        "cocina": "lm_noche_cocina_c5084ecf7bdc.jpg"
+      }
+    }
   },
   "quest": {
-    "glb": "cocina_quest_d6ba22faf530.glb"
+    "glb": "cocina_quest_d646252b5f23.glb",
+    "lm": {
+      "dia": {
+        "cocina": "lm_dia_cocina_cb2360df6ae0.jpg"
+      },
+      "noche": {
+        "cocina": "lm_noche_cocina_a143b1ebc979.jpg"
+      }
+    }
   },
   "minimap": "minimap_05ec0b03d22b.png",
   "plans": [
@@ -11,29 +27,45 @@
     "plano_igr_545c0fd2da65.jpg"
   ],
   "skies": {
-    "dia": "hdri_dia_28fb1574be7a.jpg",
-    "noche": "hdri_noche_ff9edbaff239.jpg"
+    "dia": "hdri_dia_8610a4a2d6c4.jpg",
+    "noche": "hdri_noche_76ff0e5c473f.jpg"
+  },
+  "K": {
+    "dia": {
+      "cocina": 6.132249921875
+    },
+    "noche": {
+      "cocina": 6.653383515625
+    }
   },
   "modes": {
     "dia": {
+      "label": "Día",
+      "base": "dia",
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "emis": 0.7,
       "sky": "dia",
       "bg": "#cfd3d6",
-      "hemi": 0.4,
-      "fill": 0.5,
-      "led": 16,
-      "emis": 1.0,
-      "expo": 1.05,
-      "label": "Día"
+      "env": 0.55,
+      "expo": 1.0
     },
     "noche": {
+      "label": "Noche",
+      "base": "noche",
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "emis": 1.0,
       "sky": "noche",
       "bg": "#1a1c20",
-      "hemi": 0.08,
-      "fill": 0.05,
-      "led": 28,
-      "emis": 1.6,
-      "expo": 0.72,
-      "label": "Noche"
+      "env": 0.22,
+      "expo": 0.88
     }
   },
   "plan": {
@@ -280,7 +312,7 @@
       ],
       "rects": [
         [
-          2.2,
+          2.9,
           1.9,
           4.3,
           3.65

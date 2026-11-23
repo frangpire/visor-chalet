@@ -50,7 +50,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
   <h2>Controles</h2>
   <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
   <h2>Sobre el modelo</h2>
-  <p>Modelo 3D a partir del SketchUp de IGR («La Grandiella cocina 3D») y del plano DWG IGR006 B-26 (08/10/26). El DWG manda para medidas, posiciones y equipos. Cocina de 9,05 × 5,32 m y 2,70 m de altura. Materiales PBR de hostelería (inox cepillado, gres, alicatado). Las tomas de agua, desagüe, electricidad y gas están en su posición del plano. Iluminación con el HDRI del propio SKP, paneles LED del techo y modos Día/Noche.</p>
+  <p>Modelo 3D a partir del SketchUp de IGR («La Grandiella cocina 3D») y del plano DWG IGR006 B-26 (08/10/26). El DWG manda para medidas, posiciones y equipos. Cocina de 9,05 × 5,32 m y 2,70 m de altura. Materiales PBR de hostelería (inox cepillado, gres, alicatado). Las tomas de agua, desagüe, electricidad y gas están en su posición del plano. Iluminación horneada en Cycles (lightmaps Día/Noche, TEXCOORD_1) con los 8 paneles LED encendidos y luz de día por el hueco noreste. Materiales PBR de hostelería (inox cepillado).</p>
  </section>
 </div>
 <div id="mm"><div><span id="mmroom">Cocina</span><span>N ↑</span></div><canvas id="mmc"></canvas></div>
@@ -64,6 +64,8 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {KTX2Loader} from 'three/addons/loaders/KTX2Loader.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
@@ -71,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_f4819aa3e112.json')).json();
+const CFG=await (await fetch('config_9f066c9c19a4.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -91,58 +93,98 @@ resetAerial();
 const texL=new THREE.TextureLoader();
 const pmrem=new THREE.PMREMGenerator(renderer); const SKY={};
 async function getSky(k){ if(SKY[k]) return SKY[k]; const t=await texL.loadAsync(CFG.skies[k]); t.mapping=THREE.EquirectangularReflectionMapping; t.colorSpace=THREE.SRGBColorSpace; SKY[k]={tex:t,env:pmrem.fromEquirectangular(t).texture}; return SKY[k]; }
-setLoad(0.12,'Cargando modelo…');
+// Lightmaps: TEXCOORD_1, decodificación cúbica como en vivienda3, oclusión en el especular.
+const SPECK=1/(Math.PI*1.4);
+const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
+ .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT*uBaseK; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
+ .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
+const ZU={};
+function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)}}); }
+function patchLM(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lmCocina'; }
+const LMT={};
+async function loadSet(set,prog){ if(LMT[set]) return LMT[set]; const E=Object.entries((V.lm&&V.lm[set])||{}); let n=0; const out={};
+  await Promise.all(E.map(async([z,f])=>{const t=await texL.loadAsync(f); t.flipY=false; t.colorSpace=THREE.NoColorSpace; t.channel=1; t.anisotropy=1; out[z]=t; if(prog) prog(++n/E.length);}));
+  return LMT[set]=out; }
+setLoad(0.10,'Cargando iluminación…');
 const MODE0=(P.get('modo')&&CFG.modes[P.get('modo')])?P.get('modo'):'dia';
-const loader=new GLTFLoader();
-const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.15+0.7*e.loaded/e.total);});
-setLoad(0.9,'Preparando…');
+if(V.lm) await loadSet(CFG.modes[MODE0].base||MODE0,f=>setLoad(0.10+0.20*f));
+const ktx=new KTX2Loader().setTranscoderPath('lib/addons/libs/basis/').detectSupport(renderer);
+const loader=new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder); loader.setKTX2Loader(ktx);
+setLoad(0.35,'Cargando modelo…');
+const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.35+0.50*e.loaded/e.total);});
+setLoad(0.90,'Preparando…');
 const house=gltf.scene; scene.add(house);
-const emisMats=[]; const hideAerial=[];
+const emisMats=[], zoneMats=[], hideAerial=[];
+const matCache=new Map();
+function zoneOf(o){ let p=o; while(p){ if(p.name&&p.name.startsWith('Z_')) return p.name.slice(2).replace(/_\d+$/,''); p=p.parent; } return null; }
 house.traverse(o=>{
   if(!o.isMesh) return;
   const nm=(o.name||'').toLowerCase();
   if(nm.includes('techo')||nm.includes('panel_led')||nm.includes('panel led')) hideAerial.push(o);
   const mats=Array.isArray(o.material)?o.material:[o.material];
-  for(const m of mats){
-    if(!m) continue;
-    m.side=THREE.DoubleSide;
-    if(m.map){ m.map.colorSpace=THREE.SRGBColorSpace; m.map.anisotropy=8; m.map.wrapS=m.map.wrapT=THREE.RepeatWrapping; m.map.needsUpdate=true; }
+  const z=zoneOf(o);
+  o.material=mats.map((m,i)=>{
+    if(!m) return m;
     const n=(m.name||o.name||'').toLowerCase();
     if(n.includes('techo')||n.includes('panel led')){ if(!hideAerial.includes(o)) hideAerial.push(o); }
-    if(n.includes('panel led')||n.includes('display')){
-      m.emissive=new THREE.Color(0xfffff0);
-      m.emissiveIntensity=m.userData.emis0=2.4;
-      emisMats.push(m);
-    } else if(n.includes('inox')||n.includes('cromo')||n.includes('metal')){
-      if(m.metalness!==undefined) m.metalness=Math.max(m.metalness??0,0.85);
-      if(m.roughness!==undefined) m.roughness=Math.min(m.roughness??1,0.35);
+    let mm=m;
+    if(z && V.lm){
+      const key=m.uuid+'|'+z; mm=matCache.get(key);
+      if(!mm){ mm=m.clone(); mm.aoMap=null;
+        const set0=CFG.modes[MODE0].base||MODE0;
+        if(LMT[set0]&&LMT[set0][z]){ mm.lightMap=LMT[set0][z]; mm.lightMapIntensity=1; }
+        patchLM(mm,z); mm.userData.zone=z; zoneMats.push(mm); matCache.set(key,mm);
+      }
     }
-  }
+    mm.side=THREE.DoubleSide;
+    if(mm.map){ mm.map.colorSpace=THREE.SRGBColorSpace; mm.map.anisotropy=Q==='alta'?8:4; mm.map.wrapS=mm.map.wrapT=THREE.RepeatWrapping; mm.map.needsUpdate=true; }
+    if(n.includes('panel led')||n.includes('display')){
+      // Difusor encendido, sin quemar el techo (la luz viene del lightmap).
+      mm.emissive=new THREE.Color(0xf4f1e4);
+      mm.emissiveIntensity=mm.userData.emis0=0.45;
+      mm.toneMapped=true;
+      emisMats.push(mm);
+    } else if(/inox|cromo|metal|hierro|lat[oó]n|aluminio/.test(n)){
+      // Inox cepillado de hostelería: especular aniso-aproximado, no un gris uniforme.
+      if(mm.metalness!==undefined){
+        mm.metalness=n.includes('hierro')?0.75:0.92;
+        if(n.includes('hierro')) mm.roughness=Math.max(mm.roughness??0.4,0.48);
+        else if(n.includes('fundido')) mm.roughness=0.5;
+        else if(n.includes('cepill')) mm.roughness=0.32;
+        else if(n.includes('cromo')&&!n.includes('cepill')) mm.roughness=0.16;
+        else if(n.includes('campana')) mm.roughness=0.22;
+        else mm.roughness=0.28;
+        mm.envMapIntensity=0.8;
+        if(mm.color){ const c=mm.color; const avg=(c.r+c.g+c.b)/3; if(avg>0.15&&avg<0.85 && Math.abs(c.r-c.b)<0.08) mm.color.setRGB(0.78,0.80,0.82); }
+      }
+    }
+    return mm;
+  });
+  if(Array.isArray(o.material) && o.material.length===1) o.material=o.material[0];
+  o.userData.zone=z;
 });
-// Luces de los 8 paneles LED 600x600 (posiciones del SKP)
-const LEDS=[[1.647,1.663],[3.647,1.663],[5.647,1.663],[7.647,1.663],[1.647,4.063],[3.647,4.063],[5.647,4.063],[7.647,4.063]];
-const ledLights=[];
-for(const [x,y] of LEDS){
-  const L=new THREE.PointLight(0xfff6e8, 18, 8, 1.6);
-  L.position.copy(W2T(x,y,2.62));
-  scene.add(L); ledLights.push(L);
-}
-const hemi=new THREE.HemisphereLight(0xe8eef5, 0x3a3228, 0.35); scene.add(hemi);
-const fill=new THREE.DirectionalLight(0xfff5ea, 0.45); fill.position.copy(W2T(4.5,2.2,3.8)); scene.add(fill);
 function toast(t,ms=1600){ const e=$('toast'); e.textContent=t; e.style.display='block'; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display='none',ms); }
-let curMode=MODE0, modeBusy=false, expo=1;
+let curMode=null, modeBusy=false, expo=1;
 async function setLightMode(k){
   if(modeBusy||!CFG.modes[k]) return; modeBusy=true;
   const M=CFG.modes[k];
   document.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===k));
   try{
-    const S=await getSky(M.sky);
+    const baseName=M.base||k;
+    const [base,S]=await Promise.all([V.lm?loadSet(baseName):null, getSky(M.sky)]);
+    if(base){
+      for(const [z,U] of Object.entries(ZU)){
+        const kb=Math.PI*(CFG.K&&CFG.K[baseName]&&CFG.K[baseName][z]||1);
+        const t=M.tint||[1,1,1];
+        U.uBaseK.value.set(t[0]*kb,t[1]*kb,t[2]*kb);
+      }
+      for(const m of zoneMats){ if(base[m.userData.zone]) m.lightMap=base[m.userData.zone]; }
+    }
     scene.environment=S.env;
+    scene.environmentIntensity=(M.env??0.6);
     scene.background=new THREE.Color(M.bg);
-    hemi.intensity=M.hemi; fill.intensity=M.fill;
-    for(const L of ledLights) L.intensity=M.led;
-    for(const m of emisMats) m.emissiveIntensity=(m.userData.emis0||2)*M.emis;
-    expo=M.expo; renderer.toneMappingExposure=expo;
+    for(const m of emisMats) m.emissiveIntensity=(m.userData.emis0||0.45)*(M.emis??1);
+    expo=M.expo??1; renderer.toneMappingExposure=expo;
     curMode=k;
   } finally { modeBusy=false; }
 }
