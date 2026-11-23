@@ -18,8 +18,8 @@
       "id": "lavado",
       "name": "Zona lavado",
       "x": -5.2,
-      "y": 0.375,
-      "yaw": 0.4
+      "y": 2.0,
+      "yaw": 3.55
     },
     {
       "id": "camaras",

@@ -83,7 +83,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,Q==='alta'?1.6:1.2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.05;
+renderer.toneMappingExposure=1.18;
 renderer.xr.enabled=true;
 renderer.xr.setReferenceSpaceType('local-floor');
 if(renderer.xr.setFoveation) renderer.xr.setFoveation(1);
@@ -92,7 +92,7 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xc5ccd2);
 const pmrem=new THREE.PMREMGenerator(renderer);
 scene.environment=pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity=0.28;
+scene.environmentIntensity=0.48;
 const clipCeil=new THREE.Plane(new THREE.Vector3(0,-1,0), 2.90);
 renderer.localClippingEnabled=true;
 
