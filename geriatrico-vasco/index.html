@@ -144,7 +144,10 @@ function applyRig(){
 applyRig();
 
 function setCeilingVisible(v){
-  kitchen.traverse(o=>{ if(o.isMesh && (o.name==='CEILING' || (o.name||'').startsWith('CEIL'))) o.visible=v; });
+  kitchen.traverse(o=>{
+    const n=o.name||'';
+    if(o.isMesh && (n==='CEILING' || n.startsWith('CEIL') || n.startsWith('LED_'))) o.visible=v;
+  });
 }
 function setMode(m){
   mode=m;
