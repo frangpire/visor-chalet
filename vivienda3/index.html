@@ -73,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_fbdca42cbaa2.json')).json();
+const CFG=await (await fetch('config_3dc83b85f3b7.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -114,7 +114,7 @@ const loader=new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder); loader.
 const gltf=await loader.loadAsync(V.glb,e=>{if(e.total)setLoad(0.4+0.5*e.loaded/e.total);});
 setLoad(0.92,'Preparando…');
 const house=gltf.scene; scene.add(house);
-let mirrors=[], ntri=0, ndraw=0; const matCache=new Map(); const emisMats=[], zoneMats=[], frosted=[]; let water=null;
+let mirrors=[], ntri=0, ndraw=0; const matCache=new Map(); const emisMats=[], zoneMats=[], frosted=[], ceilMats=[]; let water=null;
 house.traverse(o=>{
  if(!o.isMesh) return; ndraw++; ntri+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;
  let p=o, zn=null; while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name;break;} p=p.parent; }
@@ -122,7 +122,7 @@ house.traverse(o=>{
  o.matrixAutoUpdate=false; o.updateMatrix();
  if(zn&&zn.startsWith('Z_')){
   const z=zn.slice(2).split('_')[0]==='suelo'?'suelo':zn.slice(2).replace(/_\d+$/,'');
-  const key=m.uuid+z; let mm=matCache.get(key); if(!mm){ mm=m.clone(); mm.aoMap=null; mm.lightMap=LMT[CFG.modes[MODE0].base][z]; mm.lightMapIntensity=1; patch(mm,z); mm.userData.zone=z; if(mm.emissiveIntensity>0&&mm.emissive&&mm.emissive.getHex()>0){mm.userData.emis0=mm.emissiveIntensity; emisMats.push(mm);} zoneMats.push(mm); matCache.set(key,mm);} o.material=mm; const m2=mm;
+  const key=m.uuid+z; let mm=matCache.get(key); if(!mm){ mm=m.clone(); mm.aoMap=null; mm.lightMap=LMT[CFG.modes[MODE0].base][z]; mm.lightMapIntensity=1; patch(mm,z); mm.userData.zone=z; if(mm.emissiveIntensity>0&&mm.emissive&&mm.emissive.getHex()>0){mm.userData.emis0=mm.emissiveIntensity; emisMats.push(mm);} zoneMats.push(mm); if(mn==='techo_madera'||mn==='viga_madera'||mn==='techo'){ if(mm.map){ mm.emissive=new THREE.Color(1,1,1); mm.emissiveMap=mm.map; } else mm.emissive=mm.color.clone(); mm.emissiveIntensity=0; ceilMats.push(mm);} matCache.set(key,mm);} o.material=mm; const m2=mm;
   if(m2.map) m2.map.anisotropy=Q==='alta'?8:4;
   o.userData.zone=z;
  } else {
@@ -141,6 +141,8 @@ const far=new THREE.Mesh(farG,new THREE.MeshBasicMaterial({map:gt,color:new THRE
 far.rotation.x=-Math.PI/2; far.position.set(0,-0.065,0); scene.add(far);
 // ---------------------------------------------------------------- modos de luz: Dia / Atardecer / Noche
 let curMode=null, modeBusy=false, mirrorsReady=false;
+// v3f: el techo inclinado solo recibe luz rebotada; un pequeño 'relleno' con su propia textura evita que se vea gris oscuro (captura de Fran)
+const CEIL_LIFT={dia:0.20,atard:0.10,noche:0.05};
 function toast(t,ms=1600){ const e=$('toast'); e.textContent=t; e.style.display='block'; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display='none',ms); }
 async function setLightMode(k){
  if(modeBusy||k===curMode) return; modeBusy=true; const M=CFG.modes[k]; if(curMode) toast('Cargando '+M.label+'…',8000);
@@ -149,6 +151,7 @@ async function setLightMode(k){
    const kl=M.lamp?Math.PI*CFG.K.lamp[z]*M.lamp:0; U.uLampK.value.set(kl*M.lampTint[0],kl*M.lampTint[1],kl*M.lampTint[2]); U.uLampMap.value=lamp?lamp[z]:base[z]; }
  for(const m of zoneMats) m.lightMap=base[m.userData.zone];
  for(const m of emisMats) m.emissiveIntensity=m.userData.emis0*M.emis;
+ for(const m of ceilMats) m.emissiveIntensity=(M.ceil??CEIL_LIFT[k]??0.1);
  if(water) water.emissiveIntensity=M.pool; for(const m of frosted){ m.emissive.setHex(0xfff2e2); m.emissiveIntensity=k==='dia'?0.10:0.08; }
  scene.background=S.tex; scene.environment=S.env; scene.backgroundIntensity=M.bg; scene.environmentIntensity=M.env;
  far.material.color.setRGB(M.far[0],M.far[1],M.far[2]);
@@ -321,6 +324,6 @@ renderer.setAnimationLoop(()=>{
 if(P.get('vista')==='foto') setTimeout(()=>vistaFoto(),0); else if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
 await setLightMode(MODE0);
 $('load').remove(); window.__v3.ready=true;
-window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.touchDir=()=>({TOUCH_DIR,orbitRot:orbit.rotateSpeed}); window.__v3.vrp=()=>({vis:vrPanel.visible,attached:!!vrPanel.parent,btns:vrBtns.length}); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.place=(x,y,d)=>{pos.set(x,y); yaw=THREE.MathUtils.degToRad(d-90); pitch=-0.05; applyRig(); setMode('walk');}; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.touchDir=()=>({TOUCH_DIR,orbitRot:orbit.rotateSpeed}); window.__v3.vrp=()=>({vis:vrPanel.visible,attached:!!vrPanel.parent,btns:vrBtns.length}); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.place=(x,y,d,p)=>{pos.set(x,y); yaw=THREE.MathUtils.degToRad(d-90); pitch=(p??-0.05); applyRig(); setMode('walk');}; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
 </script>
 </body></html>
