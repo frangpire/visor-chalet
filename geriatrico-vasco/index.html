@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:,">
 <title>Cocina Geriátrico El Vasco · Visita 3D y VR</title>
 <style>
@@ -54,8 +55,9 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
   <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
   <h2>Controles</h2>
   <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.<br><b>Paredes:</b> el botón «Ocultar paredes» deja suelo, umbrales de puerta y equipos. <b>Campana:</b> «Ocultar campana» quita todas las campanas para ver la isla de cocción. En VR, el panel del mando izquierdo o el botón B/Y.</p>
+  <h2>Versión</h2><p id="ver">—</p>
   <h2>Sobre el modelo</h2>
-  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Iluminación horneada en Cycles (lightmaps Día/Noche, solo suelo, muros y techo) con IBL para el inox. El atrezo (ollas, tablas) no es un equipo del plano. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
+  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Iluminación horneada en Cycles (lightmaps Día/Noche, solo suelo, muros y techo) con IBL para el inox. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
  </section>
 </div>
 <div id="mm"><div><span id="mmroom">Cocina</span><span>planta</span></div><canvas id="mmc"></canvas></div>
@@ -92,7 +94,9 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window), isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
 const Q=P.get('q')||(isQuest?'quest':'alta');
-const CFG=await (await fetch('config.json')).json();
+const BUILD='v9 · 24/11/26';
+const CFG=await (await fetch('config.json?b='+encodeURIComponent(BUILD)+'&t='+Date.now(),{cache:'no-store'})).json();
+{ const ve=document.getElementById('ver'); if(ve) ve.textContent=BUILD+' · modelo '+String(CFG.alta&&CFG.alta.glb||'').replace(/^.*_([0-9a-f]{6})[0-9a-f]*\.glb$/,'$1')+(isQuest?' · Quest':''); }
 const V=CFG[Q]||CFG.alta;
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
 const toast=(t)=>{const e=$('toast'); e.textContent=t; e.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>e.style.display='none',2400);};
@@ -133,11 +137,11 @@ async function getSky(k){
 }
 const SPECK=1/(Math.PI*1.4);
 const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
- .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT*uBaseK; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
+ .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = max(lmT*lmT*lmT*uBaseK, uLmFloor*uFloorS); lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
  .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
 const ZU={};
-function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)}}); }
-function patchLM(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lmCocina'; }
+function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)},uLmFloor:{value:new THREE.Vector3(0,0,0)}}); }
+function patchLM(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.uniforms.uLmFloor=U.uLmFloor; sh.uniforms.uFloorS={value:/tile|paint|coving|ceil/i.test(m.name||'')?1.8:1.0}; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK; uniform vec3 uLmFloor; uniform float uFloorS;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lmCocina'; }
 const LMT={};
 async function loadSet(set,prog){ if(LMT[set]) return LMT[set]; const E=Object.entries((V.lm&&V.lm[set])||{}); let n=0; const out={};
   await Promise.all(E.map(async([z,f])=>{const t=await texL.loadAsync(f); t.flipY=false; t.colorSpace=THREE.NoColorSpace; t.channel=1; t.anisotropy=1; out[z]=t; if(prog) prog(++n/Math.max(E.length,1));}));
@@ -396,6 +400,8 @@ async function setLightMode(k){
         const kb=Math.PI*(CFG.K&&CFG.K[baseName]&&CFG.K[baseName][z]||1);
         const tt=M.tint||[1,1,1];
         U.uBaseK.value.set(tt[0]*kb,tt[1]*kb,tt[2]*kb);
+        // suelo de luz: caras que el horneado dejó negras (enterradas en otra pieza de muro) no se ven como manchas negras
+        const fl=Math.PI*(CFG.LMFLOOR&&CFG.LMFLOOR[baseName]||0); U.uLmFloor.value.set(tt[0]*fl,tt[1]*fl,tt[2]*fl);
       }
       for(const m of zoneMats){ if(base[m.userData.zone]) m.lightMap=base[m.userData.zone]; }
     }
@@ -434,7 +440,12 @@ function applyRig(){
   if(!renderer.xr.isPresenting){ camera.position.set(0,EYE,0); camera.rotation.set(pitch,0,0,'YXZ'); }
 }
 applyRig();
-function move(dx,dy){ if(!blocked(pos.x+dx,pos.y)) pos.x+=dx; if(!blocked(pos.x,pos.y+dy)) pos.y+=dy; }
+const _hp=new THREE.Vector3();
+function headOff(){ if(!renderer.xr.isPresenting) return {x:0,y:0}; camera.getWorldPosition(_hp); return {x:_hp.x-rig.position.x, y:-(_hp.z-rig.position.z)}; }
+// Se comprueba la colisión donde está la cabeza (en VR la persona puede estar a 1-2 m del origen del rig: con el origen dentro
+// de un mueble el stick no movía nada). Si la cabeza ya está dentro de un obstáculo, se deja salir.
+function move(dx,dy){ const o=headOff(); const hx=pos.x+o.x, hy=pos.y+o.y, stuck=blocked(hx,hy);
+  if(stuck||!blocked(hx+dx,hy)) pos.x+=dx; const hx2=pos.x+o.x; if(stuck||!blocked(hx2,hy+dy)) pos.y+=dy; }
 function setMode(m){
   mode=m;
   $('baer').classList.toggle('on', m==='aerial');
@@ -660,7 +671,7 @@ function xrUpdate(dt){
       if(ray.ray.intersectPlane(gnd,hit)){ const b=T2B(hit); const ok=!blocked(b.x,b.y); tmark.position.copy(hit); tmark.position.y=0.01; tmark.material.color.set(ok?0x8fd18f:0xd06060); tmark.userData.ok=ok; tmark.visible=true; } }
   }
   for(const src of s.inputSources){ if(!src.gamepad||!src.handedness) continue; const gp=src.gamepad, hand=src.handedness;
-    if(gp.axes&&gp.axes.length>=2){ const ax=gp.axes[2]??gp.axes[0], ay=gp.axes[3]??gp.axes[1];
+    if(gp.axes&&gp.axes.length>=2){ const A=gp.axes, s23=[A[2]||0,A[3]||0], s01=[A[0]||0,A[1]||0]; const [ax,ay]=(Math.hypot(s23[0],s23[1])>=Math.hypot(s01[0],s01[1]))?s23:s01;
       if(hand==='left'&&(Math.abs(ax)>0.15||Math.abs(ay)>0.15)){ const sp=1.5*dt; const hd=new THREE.Vector3(); camera.getWorldDirection(hd); let fx=hd.x, fy=-hd.z; const L=Math.hypot(fx,fy); if(L<1e-3){ fx=-Math.sin(yaw); fy=Math.cos(yaw); } else { fx/=L; fy/=L; } /* adelante = hacia donde mira la cabeza; derecha = (fy,-fx) */ move((fx*(-ay)+fy*ax)*sp,(fy*(-ay)-fx*ax)*sp); applyRig(); }
       if(hand==='right'&&Math.abs(ax)>0.7){ const k=hand+'snap'; if(!btnPrev[k]){ turnAroundHead(-Math.sign(ax)*Math.PI/6); btnPrev[k]=true; } } else btnPrev[hand+'snap']=false; }
     // Espera de activación 70 ms, un cambio por pulsación, bloqueo hasta soltar. A (dcha): Día/Noche · X (izda): campana · B (dcha): foto · Y (izda): paredes
@@ -756,7 +767,7 @@ $('load').remove();
 { const vb=VRButton.createButton(renderer,{optionalFeatures:['hand-tracking']}); $('vrtop').appendChild(vb);
   const fix=()=>{ if(vb.textContent==='ENTER VR') vb.textContent='Entrar en VR'; else if(vb.textContent==='EXIT VR') vb.textContent='Salir de VR'; else if(/NOT SUPPORTED|NOT ALLOWED|WEBXR NEEDS/i.test(vb.textContent)) vb.parentNode.style.display='none'; };
   new MutationObserver(fix).observe(vb,{childList:true,characterData:true,subtree:true}); fix(); }
-Object.assign(window.__gv,{ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}, setHoodsHidden, get hoodsHidden(){return hoodsHidden;}, hideAerial, hideWalls, hideHoods, hideFootprints, hideAlways, kitchen, CFG, conduits,
+Object.assign(window.__gv,{ready:true, TOUCH_DIR, pick:(nx,ny)=>{ const r=new THREE.Raycaster(); r.setFromCamera(new THREE.Vector2(nx,ny),camera); return r.intersectObject(kitchen,true).slice(0,4).map(h=>({o:h.object.name,m:h.object.material&&h.object.material.name,d:+h.distance.toFixed(4),p:[+h.point.x.toFixed(3),+(-h.point.z).toFixed(3),+h.point.y.toFixed(3)],n:h.face?[+h.face.normal.x.toFixed(2),+h.face.normal.y.toFixed(2),+h.face.normal.z.toFixed(2)]:null,uv1:h.uv1?[+h.uv1.x.toFixed(4),+h.uv1.y.toFixed(4)]:null})); }, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}, setHoodsHidden, get hoodsHidden(){return hoodsHidden;}, hideAerial, hideWalls, hideHoods, hideFootprints, hideAlways, kitchen, CFG, conduits,
   xr:()=>({watch:watchAnchor, watchPos:watch.visible?new THREE.Vector3().setFromMatrixPosition(watch.matrixWorld).toArray():null, rig:rig.position.toArray(),rigYaw:rig.rotation.y,cam:camera.getWorldPosition(new THREE.Vector3()).toArray(),c:[0,1].map(i=>renderer.xr.getController(i).getWorldPosition(new THREE.Vector3()).toArray()),g:[0,1].map(i=>renderer.xr.getControllerGrip(i).getWorldPosition(new THREE.Vector3()).toArray()),par:[0,1].map(i=>renderer.xr.getController(i).parent===rig&&renderer.xr.getControllerGrip(i).parent===rig&&renderer.xr.getHand(i).parent===rig),camPar:camera.parent===rig,presenting:renderer.xr.isPresenting}),
   takePhoto, dbAll, openGal, pressDown, pressUp, pressDbg:()=>JSON.parse(JSON.stringify(__press,(k,v)=>k==="fn"||k==="t"?undefined:v)), rayDbg:()=>[0,1].map(i=>{ const c=renderer.xr.getController(i); c.updateMatrixWorld(true); const hb=vrHit(c); const inv=rig.matrixWorld.clone().invert(); const o=new THREE.Vector3().setFromMatrixPosition(c.matrixWorld).applyMatrix4(inv); const d=new THREE.Vector3(0,0,-1).transformDirection(c.matrixWorld).transformDirection(inv); return {hit:hb?(hb===vrHoodMesh?'hood':hb===vrWallMesh?'walls':hb===vrPhotoMesh?'photo':'mode'):null,o:o.toArray().map(v=>+v.toFixed(3)),d:d.toArray().map(v=>+v.toFixed(3)),hand:c.userData.hand||null,sel:!!c.userData.sel}; }), watchTarget:(w)=>{ const m={photo:vrPhotoMesh,walls:vrWallMesh,hood:vrHoodMesh}[w]; if(!m) return null; m.updateMatrixWorld(true); rig.updateMatrixWorld(true); const inv=rig.matrixWorld.clone().invert(); const p=new THREE.Vector3().setFromMatrixPosition(m.matrixWorld).applyMatrix4(inv); const n=new THREE.Vector3(0,0,1).transformDirection(m.matrixWorld).transformDirection(inv); return {p:p.toArray(),n:n.toArray(),visible:watch.visible}; }, acts:()=>({...__acts}), exitXR:()=>{ const ss=renderer.xr.getSession(); if(ss) return ss.end(); },
   state:()=>({mode,x:pos.x,y:pos.y,yaw,pitch,blocked:blocked(pos.x,pos.y)}),
