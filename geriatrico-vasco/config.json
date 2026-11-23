@@ -17,15 +17,15 @@
     {
       "id": "lavado",
       "name": "Zona lavado",
-      "x": -6.8,
+      "x": -4.8,
       "y": 1.7,
       "yaw": 3.2
     },
     {
       "id": "camaras",
       "name": "C\u00e1maras",
-      "x": 2.9,
-      "y": 0.2,
+      "x": 2.8,
+      "y": 0.575,
       "yaw": -0.4
     }
   ],
