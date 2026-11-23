@@ -736,30 +736,6 @@
       4.252
     ],
     [
-      -1.331,
-      0.556,
-      -1.28,
-      0.608
-    ],
-    [
-      -1.566,
-      1.775,
-      -1.515,
-      1.826
-    ],
-    [
-      -0.381,
-      0.74,
-      -0.329,
-      0.791
-    ],
-    [
-      -0.616,
-      1.958,
-      -0.564,
-      2.01
-    ],
-    [
       -6.108,
       -1.961,
       -5.283,
@@ -1522,7 +1498,8 @@
     "Techo registrable 600×600 mm: supuesto.",
     "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting).",
     "Abatidor (leyenda n.º 12): sin huella ni bloque en el plano. Se coloca como supuesto entre los hornos de 10 bandejas (n.º 2 y 3) y el fregadero de Limpio, en la zona sucia/limpia, alineado con los hornos. Medidas supuesto 800×880×1800 mm (gabinete de abatimiento de 10 bandejas).",
-    "El DWG está en WCS con la cocina a 79,08° (11° respecto de los ejes). El PDF en papel tiene el mismo giro respecto al cajetín. El visor se endereza 10,92° para que los muros principales queden ortogonales, como se lee el plano (lavado a la izquierda, cámaras a la derecha)."
+    "El DWG está en WCS con la cocina a 79,08° (11° respecto de los ejes). El PDF en papel tiene el mismo giro respecto al cajetín. El visor se endereza 10,92° para que los muros principales queden ortogonales, como se lee el plano (lavado a la izquierda, cámaras a la derecha).",
+    "Isla de cocción (n.º 7–11 y 13): placa del fogón, parrillas y quemadores se reorientaron -10,92° para quedar ortogonales a los muros. Placa negra y tapas de latón sustituidas por hierro/inox. Bandejas del abatidor (n.º 12) y cristales GLASS_3/GLASS_1 igual."
   ],
   "mmWorld": {
     "x0": -6.8492834091186525,
@@ -1687,7 +1664,7 @@
     }
   ],
   "alta": {
-    "glb": "cocina_alta_01321c3d71c4.glb",
+    "glb": "cocina_alta_15c4af0888ba.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_3841a066e2e0.jpg"
@@ -1698,7 +1675,7 @@
     }
   },
   "quest": {
-    "glb": "cocina_quest_01321c3d71c4.glb",
+    "glb": "cocina_quest_15c4af0888ba.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_9d1f4b7f767b.jpg"
@@ -1708,7 +1685,7 @@
       }
     }
   },
-  "minimap": "minimap_d49d862762bf.png",
+  "minimap": "minimap_2b038895014f.png",
   "hdri": "hdri_dia_8610a4a2d6c4.jpg",
   "plan": "plano_75c8f44507a3.jpg",
   "skies": {
@@ -1922,30 +1899,6 @@
       3.385,
       -0.653,
       4.252
-    ],
-    [
-      -1.331,
-      0.556,
-      -1.28,
-      0.608
-    ],
-    [
-      -1.566,
-      1.775,
-      -1.515,
-      1.826
-    ],
-    [
-      -0.381,
-      0.74,
-      -0.329,
-      0.791
-    ],
-    [
-      -0.616,
-      1.958,
-      -0.564,
-      2.01
     ],
     [
       -6.108,
@@ -3211,15 +3164,15 @@
     ]
   ],
   "floorBounds": {
-    "x0": -6.8493,
-    "y0": -4.6233,
-    "x1": 7.5414,
-    "y1": 5.7439
+    "x0": -6.8492834091186525,
+    "y0": -4.623281669616699,
+    "x1": 7.541428279876709,
+    "y1": 5.743861865997315
   },
   "kitchenBounds": {
-    "x0": -6.8493,
-    "y0": -4.6233,
-    "x1": 7.5414,
-    "y1": 5.7439
+    "x0": -6.8492834091186525,
+    "y0": -4.623281669616699,
+    "x1": 7.541428279876709,
+    "y1": 5.743861865997315
   }
 }
