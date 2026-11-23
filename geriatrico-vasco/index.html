@@ -171,7 +171,7 @@ kitchen.traverse(o=>{
     // las campanas se quedan visibles
     const isFloor=n==='floor'||n.includes('suelo')||nm.includes('floor')||nm.includes('suelo');
     const isWallMat=!isFloor && (n==='tile_w'||n==='paint'||n==='coving'||n==='ceil'||n.includes('zocalo')||n.includes('zócalo'));
-    const isWallName=!isFloor && (/^(walls?|muros?|tabique|pilar|doorfr|winfr|winl|ceiling|coving|zocalo|door_|glass_|sign_)/.test(nm)
+    const isWallName=!isFloor && !nm.startsWith('wall_footprint') && !n.includes('huella') && (/^(walls?|muros?|tabique|pilar|doorfr|winfr|winl|ceiling|coving|zocalo|door_|glass_|sign_)/.test(nm)
       || nm.startsWith('led_') || nm.startsWith('door_hv'));
     if(!isFloor && (isWallMat||isWallName||(isCeil&&!isCampana)) && !isCampana && !nm.startsWith('door_mark')){
       if(!hideWalls.includes(o)) hideWalls.push(o);
@@ -224,7 +224,7 @@ kitchen.traverse(o=>{
   const nml=raw.toLowerCase();
   if(nml.startsWith('wall_footprint') || nml.includes('huella')){
     const isLine=nml.includes('line')||nml.includes('linea');
-    o.material=new THREE.MeshBasicMaterial({color:isLine?0x8a8782:0xb8a48c,side:THREE.DoubleSide,depthWrite:true});
+    o.material=new THREE.MeshBasicMaterial({color:isLine?0x8a8782:0xb8a48c,side:THREE.DoubleSide,depthWrite:true,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
     o.renderOrder=isLine?3:1;
     if(!hideFootprints.includes(o)) hideFootprints.push(o);
     o.visible=false;
