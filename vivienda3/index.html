@@ -73,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_3dc83b85f3b7.json')).json();
+const CFG=await (await fetch('config_994c5ad7a98b.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
