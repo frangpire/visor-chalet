@@ -244,7 +244,7 @@ kitchen.traverse(o=>{
     || (nml.startsWith('u_') && !isDrainFloor);
   const isCeilToma=nml.startsWith('u_') && pb.z>2.5;
   // en aérea, nada fuera del contorno del suelo (tomas de fachada, bajantes, etc.)
-  if((isCeilToma||outsideFloor) && !hideAerial.includes(o) && !isHood && !nml.startsWith('door_mark')) hideAerial.push(o);
+  if((isCeilToma||outsideFloor||isWallHung) && !hideAerial.includes(o) && !isHood && !nml.startsWith('door_mark')) hideAerial.push(o);
   if((isWallHung||(outsideFloor&&(nml.startsWith('u_')||isWallHung))) && !hideWalls.includes(o)) hideWalls.push(o);
 });
 // Sin PointLights: la luz de arquitectura viene del lightmap. El IBL ilumina el inox.
