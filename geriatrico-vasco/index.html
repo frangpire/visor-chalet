@@ -49,7 +49,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
   <h2>Controles</h2>
   <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
   <h2>Sobre el modelo</h2>
-  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas y tomas en su posición). Altura libre de 3,00 m, alicatado, zócalo sanitario y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. No se ha inventado ningún equipo que no figure en el plano.</p>
+  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Luz horneada en Cycles. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
  </section>
 </div>
 <div id="mm"><div><span id="mmroom">Cocina</span><span>planta</span></div><canvas id="mmc"></canvas></div>
@@ -83,7 +83,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,Q==='alta'?1.6:1.2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=0.92;
+renderer.toneMappingExposure=1.05;
 renderer.xr.enabled=true;
 renderer.xr.setReferenceSpaceType('local-floor');
 if(renderer.xr.setFoveation) renderer.xr.setFoveation(1);
@@ -92,6 +92,9 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xc5ccd2);
 const pmrem=new THREE.PMREMGenerator(renderer);
 scene.environment=pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity=0.28;
+const clipCeil=new THREE.Plane(new THREE.Vector3(0,-1,0), 2.90);
+renderer.localClippingEnabled=true;
 
 const rig=new THREE.Group(); scene.add(rig);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,200);
@@ -107,20 +110,66 @@ function resetAerial(){
 }
 resetAerial();
 
-setLoad(0.15,'Cargando modelo…');
+// Lightmaps on UV1 (TEXCOORD_1), cube-root decode, same method as vivienda3
+const SPECK=1/(Math.PI*1.4);
+const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
+ .replace('vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;','vec3 lmT=lightMapTexel.rgb; vec3 lightMapIrradiance = lmT*lmT*lmT*uBaseK; lmOcc=clamp(dot(lightMapIrradiance,vec3(0.2126,0.7152,0.0722))*uSpecK,0.0,1.0);')
+ .replace('iblIrradiance += getIBLIrradiance( geometryNormal );','');
+const ZU={};
+function zu(z){ return ZU[z]??=({uBaseK:{value:new THREE.Vector3(1,1,1)}}); }
+function patchLM(m,z){ const U=zu(z); m.onBeforeCompile=sh=>{sh.uniforms.uSpecK={value:SPECK}; sh.uniforms.uBaseK=U.uBaseK; sh.fragmentShader='uniform float uSpecK; uniform vec3 uBaseK;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','float lmOcc=1.0;\n'+LMCHUNK+'\nradiance*=lmOcc;');}; m.customProgramCacheKey=()=>'lmK'; }
+
+setLoad(0.10,'Cargando luz…');
+const texL=new THREE.TextureLoader();
+const LMT={};
+const lmFiles=(V.lm && (V.lm.dia||V.lm))||{};
+await Promise.all(Object.entries(lmFiles).map(async([z,f],i,arr)=>{
+  const tex=await texL.loadAsync(f);
+  tex.flipY=false; tex.colorSpace=THREE.NoColorSpace; tex.channel=1; tex.anisotropy=1;
+  LMT[z]=tex;
+}));
+
+setLoad(0.40,'Cargando modelo…');
 const loader=new GLTFLoader();
-const gltf=await loader.loadAsync(V.glb, e=>{ if(e.total) setLoad(0.15+0.7*e.loaded/e.total); });
-setLoad(0.9,'Preparando…');
+const gltf=await loader.loadAsync(V.glb, e=>{ if(e.total) setLoad(0.40+0.5*e.loaded/e.total); });
+setLoad(0.92,'Preparando…');
 const kitchen=gltf.scene; scene.add(kitchen);
+const matCache=new Map();
 kitchen.traverse(o=>{
   if(!o.isMesh) return;
   o.castShadow=false; o.receiveShadow=false;
-  const m=o.material;
-  if(m && m.map) m.map.anisotropy=4;
-  if(m && m.emissive && m.emissiveIntensity>0){ /* keep */ }
+  o.matrixAutoUpdate=false; o.updateMatrix();
+  let p=o, zn=null;
+  while(p){ if(p.name&&(p.name.startsWith('Z_')||p.name.startsWith('NOLM'))){zn=p.name; break;} p=p.parent; }
+  if(!zn && o.name && o.name.startsWith('Z_')) zn=o.name;
+  const m=o.material; if(!m) return;
+  const mn=(m.name||'').split('.')[0];
+  if(zn && zn.startsWith('Z_') && LMT[zn.slice(2).split('.')[0]]){
+    const z=zn.slice(2).split('.')[0];
+    const key=m.uuid+z;
+    let mm=matCache.get(key);
+    if(!mm){
+      mm=m.clone();
+      mm.aoMap=null;
+      mm.lightMap=LMT[z];
+      mm.lightMapIntensity=1;
+      patchLM(mm,z);
+      mm.userData.zone=z;
+      if(mm.map) mm.map.anisotropy=Q==='alta'?8:4;
+      matCache.set(key,mm);
+    }
+    o.material=mm;
+  } else if(mn==='vidrio' || o.name.startsWith('GLASS_')){
+    o.material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:0.14,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide});
+    o.renderOrder=2;
+  } else {
+    if(m.map) m.map.anisotropy=4;
+  }
 });
-scene.add(new THREE.HemisphereLight(0xe8eef5, 0x6a6a60, 0.35));
-scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+for(const [z,U] of Object.entries(ZU)){
+  const kb=Math.PI*((CFG.K&&CFG.K.dia&&CFG.K.dia[z])||(CFG.K&&CFG.K[z])||1);
+  U.uBaseK.value.set(kb,kb,kb);
+}
 
 // collisions: AABBs in Blender XY (meters)
 const RECTS=CFG.aabbs||[];
@@ -144,10 +193,8 @@ function applyRig(){
 applyRig();
 
 function setCeilingVisible(v){
-  kitchen.traverse(o=>{
-    const n=o.name||'';
-    if(o.isMesh && (n==='CEILING' || n.startsWith('CEIL') || n.startsWith('LED_'))) o.visible=v;
-  });
+  // After the lightmap join, ceiling and LEDs are in Z_cocina/Z_camaras: clip above 2.90 m in aerial view.
+  renderer.clippingPlanes = v ? [] : [clipCeil];
 }
 function setMode(m){
   mode=m;
