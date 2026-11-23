@@ -1,0 +1,338 @@
+{
+  "alta": {
+    "glb": "cocina_alta_5c03b9a42e65.glb"
+  },
+  "quest": {
+    "glb": "cocina_quest_5c03b9a42e65.glb"
+  },
+  "minimap": "minimap_05ec0b03d22b.png",
+  "plans": [
+    "plano_dwg_6549ca20fd72.png",
+    "plano_igr_545c0fd2da65.jpg"
+  ],
+  "skies": {
+    "dia": "hdri_dia_28fb1574be7a.jpg",
+    "noche": "hdri_noche_ff9edbaff239.jpg"
+  },
+  "modes": {
+    "dia": {
+      "sky": "dia",
+      "bg": "#cfd3d6",
+      "hemi": 0.4,
+      "fill": 0.5,
+      "led": 16,
+      "emis": 1.0,
+      "expo": 1.05,
+      "label": "Día"
+    },
+    "noche": {
+      "sky": "noche",
+      "bg": "#1a1c20",
+      "hemi": 0.08,
+      "fill": 0.05,
+      "led": 28,
+      "emis": 1.6,
+      "expo": 0.72,
+      "label": "Noche"
+    }
+  },
+  "plan": {
+    "X0": -0.2,
+    "Y0": -0.2,
+    "X1": 9.25,
+    "Y1": 5.5200000000000005,
+    "w": 900,
+    "h": 540
+  },
+  "collide": {
+    "rects": [
+      [
+        1.48,
+        0.1,
+        2.68,
+        0.883
+      ],
+      [
+        2.68,
+        0.1,
+        3.88,
+        0.883
+      ],
+      [
+        4.68,
+        0.1,
+        5.08,
+        0.883
+      ],
+      [
+        8.139,
+        2.43,
+        8.95,
+        3.81
+      ],
+      [
+        8.139,
+        3.83,
+        8.95,
+        5.21
+      ],
+      [
+        0.0,
+        0.0,
+        9.05,
+        0.1
+      ],
+      [
+        0.0,
+        0.1,
+        0.1,
+        3.28
+      ],
+      [
+        0.0,
+        4.25,
+        0.1,
+        5.32
+      ],
+      [
+        0.1,
+        5.22,
+        4.8,
+        5.32
+      ],
+      [
+        8.95,
+        0.1,
+        9.05,
+        5.22
+      ],
+      [
+        0.12,
+        1.945,
+        1.092,
+        2.795
+      ],
+      [
+        1.475,
+        0.1,
+        1.875,
+        1.03
+      ],
+      [
+        1.875,
+        0.1,
+        3.075,
+        1.034
+      ],
+      [
+        3.075,
+        0.1,
+        3.475,
+        1.033
+      ],
+      [
+        3.475,
+        0.1,
+        3.875,
+        1.03
+      ],
+      [
+        3.875,
+        0.1,
+        4.675,
+        1.033
+      ],
+      [
+        4.675,
+        0.1,
+        5.075,
+        1.03
+      ],
+      [
+        2.327,
+        4.374,
+        3.126,
+        5.229
+      ],
+      [
+        1.643,
+        4.468,
+        2.343,
+        5.22
+      ],
+      [
+        3.126,
+        4.468,
+        4.726,
+        5.22
+      ],
+      [
+        0.1,
+        0.1,
+        1.44,
+        1.91
+      ],
+      [
+        8.248,
+        0.1,
+        8.95,
+        2.419
+      ],
+      [
+        0.1,
+        4.82,
+        1.623,
+        5.22
+      ],
+      [
+        6.45,
+        0.1,
+        8.249,
+        0.801
+      ],
+      [
+        2.347,
+        2.093,
+        4.147,
+        2.794
+      ],
+      [
+        5.075,
+        0.1,
+        6.45,
+        0.802
+      ]
+    ]
+  },
+  "rooms": [
+    {
+      "name": "Entrada",
+      "p": [
+        1.15,
+        3.76,
+        0
+      ],
+      "rects": [
+        [
+          0.15,
+          3.28,
+          2.0,
+          4.25
+        ]
+      ]
+    },
+    {
+      "name": "Línea de cocción",
+      "p": [
+        3.3,
+        1.55,
+        270
+      ],
+      "rects": [
+        [
+          1.4,
+          0.15,
+          5.3,
+          2.0
+        ]
+      ]
+    },
+    {
+      "name": "Horno",
+      "p": [
+        1.8,
+        2.4,
+        180
+      ],
+      "rects": [
+        [
+          0.15,
+          1.7,
+          2.3,
+          3.2
+        ]
+      ]
+    },
+    {
+      "name": "Isla",
+      "p": [
+        3.3,
+        3.4,
+        270
+      ],
+      "rects": [
+        [
+          2.2,
+          1.9,
+          4.3,
+          3.0
+        ]
+      ]
+    },
+    {
+      "name": "Lavado",
+      "p": [
+        2.7,
+        3.45,
+        90
+      ],
+      "rects": [
+        [
+          1.5,
+          3.3,
+          4.9,
+          5.22
+        ]
+      ]
+    },
+    {
+      "name": "Frío",
+      "p": [
+        6.7,
+        3.3,
+        0
+      ],
+      "rects": [
+        [
+          7.9,
+          2.3,
+          8.95,
+          5.22
+        ]
+      ]
+    },
+    {
+      "name": "Fregaderos y mesa",
+      "p": [
+        6.2,
+        2.0,
+        270
+      ],
+      "rects": [
+        [
+          5.0,
+          0.15,
+          8.95,
+          2.3
+        ]
+      ]
+    }
+  ],
+  "notes": {
+    "dwg_alignment": "DWG mm -> plan m: x/1000-76.953, y/1000-1.037 (traslación del DWG importado en el SKP, identidad de rotación).",
+    "horno": "El cajetín del DWG dice «HORNO 10 BANDEJAS» y hay bloques SCC 101 G (Rational 10×GN1/1). El SKP modela un iCombi Pro 6-1/1 en la misma huella (~0,85×0,97 m). Se mantiene la geometría del SKP (no hay malla 10-1/1 usable) y se anota la diferencia: misma planta, altura de máquina posiblemente menor que un 10-1/1.",
+    "cocina_fuegos": "Cajetín DWG: «COCINA 6 FUEGOS». Coincide con el SKP (Electrolux E9GCGL6C00, 6 quemadores).",
+    "techo_led": "Capa SKP «04 Techo e iluminación» está oculta en SketchUp; se incluye en el visor. Los 8 paneles LED 600×600 no aparecen como bloques en el DWG (capa electricidad vacía). Supuesto: retícula de techo de cocina industrial del modelo SKP de Nacho.",
+    "puerta": "Puerta vaivén inox con ojo de buey en hueco oeste 0,97 m (Y 3,28–4,25). Colisión: paso libre (se empuja la vaivén). Supuesto de recorrido.",
+    "tomas": "Tomas de agua, desagüe, electricidad y gas colocadas en la posición exacta del DWG. Altura: cota Z del bloque si es razonable; si no, cota de texto más cercana («h … m del suelo» / rasante); si no, nota del plano «tomas auxiliares a 1,2 m» o rasante para desagües.",
+    "atrezo": "Tablas APPCC, verduras, ollas, cestas, menaje y extintor proceden del SKP (capa 05 Atrezo), coherentes con una cocina industrial. El extintor está en el modelo 3D; en el DWG no hay bloque de extintor (supuesto de atrezo del SKP).",
+    "mesas_extra": "Mesas Distform, estantería, elementos neutros y bases abiertas Electrolux están en el SKP y coinciden con la distribución del dibujo (no solo con la tabla de 9 equipos del cajetín)."
+  },
+  "bounds": [
+    0,
+    0,
+    9.05,
+    5.32,
+    2.72
+  ]
+}
