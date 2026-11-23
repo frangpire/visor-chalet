@@ -223,6 +223,9 @@ kitchen.traverse(o=>{
   const raw=(o.name||'');
   const nml=raw.toLowerCase();
   if(nml.startsWith('wall_footprint') || nml.includes('huella')){
+    const isLine=nml.includes('line')||nml.includes('linea');
+    o.material=new THREE.MeshBasicMaterial({color:isLine?0x8a8782:0xb8a48c,side:THREE.DoubleSide,depthWrite:true});
+    o.renderOrder=isLine?3:1;
     if(!hideFootprints.includes(o)) hideFootprints.push(o);
     o.visible=false;
     return;
@@ -240,8 +243,9 @@ kitchen.traverse(o=>{
   const isWallHung=nml.startsWith('sign_')||nml.startsWith('extintor')||nml.includes('interrupt')
     || (nml.startsWith('u_') && !isDrainFloor);
   const isCeilToma=nml.startsWith('u_') && pb.z>2.5;
-  if((isCeilToma||outsideFloor) && !hideAerial.includes(o)) hideAerial.push(o);
-  if((isWallHung||(outsideFloor&&nml.startsWith('u_'))) && !hideWalls.includes(o)) hideWalls.push(o);
+  // en aérea, nada fuera del contorno del suelo (tomas de fachada, bajantes, etc.)
+  if((isCeilToma||outsideFloor) && !hideAerial.includes(o) && !isHood && !nml.startsWith('door_mark')) hideAerial.push(o);
+  if((isWallHung||(outsideFloor&&(nml.startsWith('u_')||isWallHung))) && !hideWalls.includes(o)) hideWalls.push(o);
 });
 // Sin PointLights: la luz de arquitectura viene del lightmap. El IBL ilumina el inox.
 
@@ -639,6 +643,6 @@ if(P.get('mode')==='walk'||P.get('room')){
   if(r) goRoom(r); else setMode('walk');
 } else setMode('aerial');
 $('load').remove();
-window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}};
+window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}, hideAerial, hideWalls, hideHoods, hideFootprints, hideAlways, kitchen, CFG};
 </script>
 </body></html>
