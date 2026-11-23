@@ -39,7 +39,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <div id="load"><div id="lt">Cargando la vivienda…</div><div id="bar"><i></i></div></div>
 <canvas id="c"></canvas>
 <div id="ui">
- <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
+ <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button><button class="b" id="bfoto" title="Encuadre de la foto de referencia">Foto</button></div>
  <div id="modes"><button class="b m" data-m="dia">☀️ Día</button><button class="b m" data-m="atard">🌅 Atardecer</button><button class="b m" data-m="noche">🌙 Noche</button></div>
  <section id="panel" hidden>
   <h1>Vivienda 3 · Opción 5</h1>
@@ -73,7 +73,7 @@ const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
 const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
-const CFG=await (await fetch('config_795cc51a3384.json')).json();
+const CFG=await (await fetch('config_371fd96bcf14.json')).json();
 const V=CFG[Q];
 const W2T=(x,y,z=0)=>new THREE.Vector3(x,z,-y);           // plano (X este, Y norte, Z arriba) -> three
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -199,7 +199,11 @@ function goRoom(r){ pos.set(r.p[0],r.p[1]); yaw=THREE.MathUtils.degToRad(r.p[2]-
 function goto(x,y){ if(blocked(x,y)) return false; pos.set(x,y); applyRig(); return true; }
 const rb=$('rooms'); for(const r of CFG.rooms){ const b=document.createElement('button'); b.className='b'; b.textContent=r.name; b.onclick=()=>{goRoom(r); $('panel').hidden=true;}; rb.appendChild(b); }
 $('bopt').onclick=()=>{$('panel').hidden=!$('panel').hidden;};
-$('baer').onclick=()=>{resetAerial(); setMode('aerial');};
+$('baer').onclick=()=>{orbit.maxPolarAngle=Math.PI*0.47; resetAerial(); setMode('aerial');};
+// t283u: punto de vista de la foto de referencia (frontal centrado desde el sur, camino a la izquierda en primer plano) (supuesto: camara a 1.70 m)
+const FOTO=[10.0,-21.0,1.70,10.0,6.0,1.5,42];
+function vistaFoto(){ orbit.maxPolarAngle=Math.PI*0.499; window.__v3.view(...FOTO); }
+$('bfoto').onclick=()=>vistaFoto();
 $('bwalk').onclick=()=>goRoom(CFG.rooms[0]);
 document.querySelectorAll('[data-q]').forEach(b=>{b.classList.toggle('on',b.dataset.q===Q); b.onclick=()=>{const u=new URL(location.href); u.searchParams.set('q',b.dataset.q); location.href=u;};});
 addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='Escape'){$('plan').hidden=true;}}); addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -314,9 +318,9 @@ renderer.setAnimationLoop(()=>{
  fpsN++; fpsT+=dt; if(fpsT>1){window.__v3.fps=fpsN/fpsT; fpsN=0; fpsT=0;}
 });
 // vista inicial
-if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
+if(P.get('vista')==='foto') setTimeout(()=>vistaFoto(),0); else if(P.get('mode')==='walk'||P.get('room')){ const r=CFG.rooms.find(r=>r.name===P.get('room'))||CFG.rooms[0]; goRoom(r);} else setMode('aerial');
 await setLightMode(MODE0);
 $('load').remove(); window.__v3.ready=true;
-window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.touchDir=()=>({TOUCH_DIR,orbitRot:orbit.rotateSpeed}); window.__v3.vrp=()=>({vis:vrPanel.visible,attached:!!vrPanel.parent,btns:vrBtns.length}); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
+window.__v3.goRoom=n=>goRoom(CFG.rooms.find(r=>r.name===n)); window.__v3.mirDbg=()=>mirrorInfo.map(m=>{m.mm.geometry.computeBoundingBox(); const b=m.mm.geometry.boundingBox; return [b.min.toArray().map(v=>+v.toFixed(2)),b.max.toArray().map(v=>+v.toFixed(2)),m.mm.geometry.attributes.position.count];}); window.__v3.mirrors=()=>mirrorInfo.map(m=>[m.room,m.cc.position.toArray().map(v=>+v.toFixed(2))]); window.__v3.setMode=k=>setLightMode(k); window.__v3.touchDir=()=>({TOUCH_DIR,orbitRot:orbit.rotateSpeed}); window.__v3.vrp=()=>({vis:vrPanel.visible,attached:!!vrPanel.parent,btns:vrBtns.length}); window.__v3.zu=()=>({zu:Object.fromEntries(Object.entries(ZU).map(([k,u])=>[k,u.uBaseK.value.toArray().concat(u.uLampK.value.toArray())])),nz:zoneMats.length,lights:(()=>{let n=[];scene.traverse(o=>{if(o.isLight)n.push(o.type+':'+o.intensity)});return n})()}); window.__v3.view=(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(W2T(px,py,pz)); orbit.target.copy(W2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); }; window.__v3.curMode=()=>curMode+(modeBusy?'*':''); window.__v3.xr=()=>renderer.xr.isPresenting; window.__v3.place=(x,y,d)=>{pos.set(x,y); yaw=THREE.MathUtils.degToRad(d-90); pitch=-0.05; applyRig(); setMode('walk');}; window.__v3.state=()=>({mode,x:pos.x,y:pos.y,yaw,blocked:blocked(pos.x,pos.y)});
 </script>
 </body></html>
