@@ -160,15 +160,16 @@ kitchen.traverse(o=>{
     const n=((m.name||o.name||'')+'').toLowerCase();
     const isCeil=n.includes('ceil')||n.includes('techo')||n.includes('led')||nm.startsWith('led_')||nm==='ceiling';
     const isCampana=nm.includes('campana')||nm.includes('ls9p_hood')||nm.includes('det_ls9p_arm')||nm.includes('det_campana');
-    if(isCeil && !isCampana){
+    if(isCeil && !isCampana && n!=='floor' && !n.includes('suelo') && !nm.includes('floor')){
       if(!hideAerial.includes(o)) hideAerial.push(o);
     }
     // muros / tabiques / pilares / dinteles / antepechos / techo / zócalo / hojas de puerta / vidrio de ventana
     // las campanas se quedan visibles
-    const isWallMat=n==='tile_w'||n==='paint'||n==='coving'||n==='ceil'||n.includes('zocalo')||n.includes('zócalo');
-    const isWallName=/^(walls?|muros?|tabique|pilar|doorfr|winfr|winl|ceiling|coving|zocalo|door_|glass_|sign_)/.test(nm)
-      || nm.startsWith('led_') || nm.startsWith('door_hv');
-    if((isWallMat||isWallName||(isCeil&&!isCampana)) && !isCampana && !nm.startsWith('door_mark')){
+    const isFloor=n==='floor'||n.includes('suelo')||nm.includes('floor')||nm.includes('suelo');
+    const isWallMat=!isFloor && (n==='tile_w'||n==='paint'||n==='coving'||n==='ceil'||n.includes('zocalo')||n.includes('zócalo'));
+    const isWallName=!isFloor && (/^(walls?|muros?|tabique|pilar|doorfr|winfr|winl|ceiling|coving|zocalo|door_|glass_|sign_)/.test(nm)
+      || nm.startsWith('led_') || nm.startsWith('door_hv'));
+    if(!isFloor && (isWallMat||isWallName||(isCeil&&!isCampana)) && !isCampana && !nm.startsWith('door_mark')){
       if(!hideWalls.includes(o)) hideWalls.push(o);
     }
     let mm=m;
@@ -234,6 +235,7 @@ kitchen.traverse(o=>{
   const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,opacity:0.85,side:THREE.DoubleSide});
   const grp=new THREE.Group(); grp.name='CONTACT_SHADOWS';
   for(const r of list){
+    const area=(r[2]-r[0])*(r[3]-r[1]); if(area<0.12) continue;
     const w=Math.max(0.12,(r[2]-r[0])+0.16), d=Math.max(0.12,(r[3]-r[1])+0.16);
     const pl=new THREE.Mesh(new THREE.PlaneGeometry(w,d), mat);
     pl.rotation.x=-Math.PI/2;
