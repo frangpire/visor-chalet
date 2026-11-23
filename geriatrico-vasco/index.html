@@ -12,6 +12,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#c5ccd2;font-family:sy
 .b{background:#fffef9;border:1px solid #bbb;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-height:40px;color:#222}
 .b:hover{background:#e8eef3}.b.on{background:#3a5a7a;color:#fff;border-color:#2a4460}
 #top{display:flex;gap:6px;flex-wrap:wrap}
+#wallsbox{display:flex;gap:6px;flex-wrap:wrap}
 #toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000b;color:#fff;padding:8px 14px;border-radius:8px;z-index:30;font-size:14px;display:none}
 #panel{background:#fffef9;border:1px solid #ddd;border-radius:12px;padding:10px;overflow:auto;box-shadow:0 5px 24px #0003;font-size:13px;color:#222}
 #panel[hidden]{display:none}#panel h1{font-size:15px;margin:2px 4px 8px}
@@ -29,6 +30,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#c5ccd2;font-family:sy
 #ptools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;background:#fffef9;border-bottom:1px solid #ccc}
 #ptitle{margin-right:auto;font-weight:600}
 #pc{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:grab}
+#vrtop{display:inline-flex}
+#gal{position:fixed;inset:0;z-index:45;background:#f3f4f1;display:flex;flex-direction:column}#gal[hidden]{display:none}#gtools{display:flex;gap:6px;align-items:center;padding:8px;background:#fffef9;border-bottom:1px solid #ccc}#gnote{margin:6px 10px;font-size:13px;color:#444}#ggrid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:10px}#ggrid figure{margin:0;background:#fff;border:1px solid #ddd;border-radius:8px;overflow:hidden}#ggrid img{width:100%;display:block}#ggrid figcaption{display:flex;gap:6px;align-items:center;justify-content:space-between;padding:6px;font-size:12px}#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .35s}
+#vrtop #VRButton{width:auto!important;min-height:40px;padding:9px 12px!important}
 #VRButton{position:static!important;transform:none!important;width:100%!important;left:auto!important;bottom:auto!important;margin:0!important;background:#2d5a3d!important;opacity:1!important;font-size:14px!important;padding:10px!important;border-radius:9px!important;border:0!important}
 body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 @media(max-width:700px){.b{font-size:12px;padding:6px 8px;min-height:34px}#mm{width:34vw;top:auto;bottom:96px;right:8px}}
@@ -38,18 +42,18 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <div id="load"><div id="lt">Cargando la cocina…</div><div id="bar"><i></i></div></div>
 <canvas id="c"></canvas>
 <div id="ui">
- <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
+ <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button><button class="b" id="bshot" title="Guardar una foto de lo que ves">📷 Foto</button><button class="b" id="bgal">Fotos <span id="galn"></span></button><span id="vrtop"></span></div>
  <div id="modes"><button class="b m" data-m="dia">☀️ Día</button><button class="b m" data-m="noche">🌙 Noche</button></div>
- <div id="wallsbox"><button class="b" id="bwalls" aria-pressed="false">Ocultar paredes</button></div>
+ <div id="wallsbox"><button class="b" id="bwalls" aria-pressed="false">Ocultar paredes</button> <button class="b" id="bhood" aria-pressed="false">Ocultar campana</button></div>
  <section id="panel" hidden>
   <h1>Cocina · Geriátrico El Vasco</h1>
   <p>IGR010 B–25 · IGR Hostelería · Plano de distribución 08/10/26</p>
   <h2>Ir a una zona</h2><div class="grid" id="rooms"></div>
-  <h2>Realidad virtual</h2><div id="vrslot"></div>
-  <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo: teletransporte al suelo · stick izquierdo: andar · stick derecho: girar.</p>
+  <h2>Realidad virtual</h2><p>Botón «Entrar en VR» en la barra superior (o el botón VR del navegador de las gafas).</p>
+  <p id="vrnote">Pulsa «Entrar en VR» (arriba) o el botón VR del navegador de las gafas. <b>Stick izquierdo</b>: andar hacia donde miras (adelante, atrás, a los lados). <b>Stick derecho</b>: girar 30° sobre tu cabeza. <b>Gatillo</b> o pellizco: teletransporte al suelo y pulsar los botones del reloj. <b>A</b>: Día / Noche · <b>B</b>: foto · <b>X</b>: campana · <b>Y</b>: paredes. En la muñeca izquierda llevas un reloj con brújula (la flecha roja marca el norte del plano), la hora y los botones Día/Noche, Foto, Paredes y Campana. Las fotos se guardan en este navegador; al salir de VR ábrelas con «Fotos» para verlas y descargarlas.</p>
   <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
   <h2>Controles</h2>
-  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.<br><b>Paredes:</b> el botón «Ocultar paredes» deja suelo, umbrales de puerta y equipos. En VR, el panel del mando izquierdo o el botón B/Y.</p>
+  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.<br><b>Paredes:</b> el botón «Ocultar paredes» deja suelo, umbrales de puerta y equipos. <b>Campana:</b> «Ocultar campana» quita todas las campanas para ver la isla de cocción. En VR, el panel del mando izquierdo o el botón B/Y.</p>
   <h2>Sobre el modelo</h2>
   <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Iluminación horneada en Cycles (lightmaps Día/Noche, solo suelo, muros y techo) con IBL para el inox. El atrezo (ollas, tablas) no es un equipo del plano. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
  </section>
@@ -58,6 +62,8 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <div id="toast"></div>
 <div id="hint">Cargando…</div>
 <div id="joy"><div id="knob"></div></div>
+<section id="gal" hidden><div id="gtools"><b style="margin-right:auto">Fotos guardadas en este dispositivo</b><button class="b" id="gall">Descargar todas</button><button class="b" id="gclose">Cerrar ✕</button></div><p id="gnote">Las fotos se guardan solo en este navegador (no se envían a ningún servidor). Toca una para descargarla.</p><div id="ggrid"></div></section>
+<div id="flash"></div>
 <section id="plan" hidden><div id="ptools"><span id="ptitle">Plano original IGR010 B–25</span>
  <button class="b" id="pplus">＋</button><button class="b" id="pminus">－</button><button class="b" id="pfit">Encajar</button><button class="b" id="pclose">Cerrar ✕</button></div>
  <canvas id="pc"></canvas></section>
@@ -67,7 +73,21 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {VRButton} from 'three/addons/webxr/VRButton.js';
 import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
+import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+// Pulsación: espera de activación de 70 ms (dentro de 60-80), un único cambio por pulsación y bloqueo hasta soltar.
+const ACT_MS=70, __press={}, __acts={};
+function pressDown(k,act,fn){ const p=__press[k]||(__press[k]={}); if(p.down) return; p.down=true; p.fired=false; p.fn=fn; p.act=act; p.t0=performance.now(); clearTimeout(p.t);
+  p.t=setTimeout(()=>{ if(p.down&&!p.fired){ p.fired=true; __acts[act]=(__acts[act]||0)+1; fn(); } },ACT_MS); }
+function pressUp(k,tap){ const p=__press[k]; if(!p) return; const wasDown=p.down; p.down=false; clearTimeout(p.t);
+  // HTML: un toque corto (15-70 ms) cuenta igual, una sola vez, al soltar. Mandos y gatillo: hace falta mantener 70 ms.
+  if(tap&&wasDown&&!p.fired&&p.fn&&performance.now()-p.t0>=15){ p.fired=true; __acts[p.act]=(__acts[p.act]||0)+1; p.fn(); } }
+function bindPress(el,act,fn){ if(!el) return; el.onclick=null; const k='html:'+(el.id||act)+':'+act+':'+Math.random();
+  el.addEventListener('pointerdown',e=>{ if(e.button>0) return; try{ el.setPointerCapture(e.pointerId); }catch(_){} pressDown(k,act,fn); });
+  el.addEventListener('pointerup',()=>pressUp(k,true)); for(const t of ['pointercancel','lostpointercapture']) el.addEventListener(t,()=>pressUp(k));
+  el.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')){ e.preventDefault(); if(!e.repeat) pressDown(k,act,fn); } });
+  el.addEventListener('keyup',e=>{ if(e.key==='Enter'||e.key===' ') pressUp(k,true); });
+  el.addEventListener('click',e=>e.preventDefault()); }
 const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
 const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window), isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -132,16 +152,15 @@ const aerial=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,400);
 const orbit=new OrbitControls(aerial,renderer.domElement);
 orbit.enableDamping=true; orbit.maxPolarAngle=Math.PI*0.49; orbit.minDistance=3; orbit.maxDistance=40;
 function frameAerial(){
+  // Vista aérea en 3/4 desde el sur, como La Grandiella (no cenital)
   const W=CFG.mmWorld||CFG.floorBounds||{x0:-7,y0:-5.5,x1:7.5,y1:5.4};
   const cx=(W.x0+W.x1)/2, cy=(W.y0+W.y1)/2;
   const span=Math.max(W.x1-W.x0, W.y1-W.y0);
-  const h=Math.max(16, span*1.2);
-  const off=span*0.02; // almost zenith; a tiny south offset keeps OrbitControls stable
+  const k=innerWidth<innerHeight?1.75:1;
   aerial.up.set(0,1,0);
-  aerial.position.copy(B2T(cx, cy-off, h));
-  orbit.target.copy(B2T(cx, cy, 0.05));
-  orbit.minPolarAngle=0.02;
-  orbit.maxPolarAngle=Math.PI*0.49;
+  aerial.position.copy(B2T(cx-0.12*span*k, cy-0.62*span*k, 0.95*span*k));
+  orbit.target.copy(B2T(cx, cy-0.3, 0.4));
+  orbit.minPolarAngle=0; orbit.maxPolarAngle=Math.PI*0.47;
   orbit.update();
 }
 function resetAerial(){ frameAerial(); }
@@ -166,6 +185,19 @@ const hideAerial=[], hideWalls=[], hideHoods=[], hideFootprints=[], hideAlways=[
 const KB=CFG.kitchenBounds||{x0:-7.42,y0:-5.73,x1:7.67,y1:5.62};
 const FB=CFG.floorBounds||{x0:-6.87,y0:-5.09,x1:7.09,y1:5.04};
 const inBox=(x,y,b)=>x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1;
+// v7: suelo de gres igual que La Grandiella (textura 33×33 cm, color del SketchUp de IGR)
+const gresTex=await texL.loadAsync('suelo_gres_71e6ff71eb9c.jpg');
+gresTex.colorSpace=THREE.SRGBColorSpace; gresTex.wrapS=gresTex.wrapT=THREE.RepeatWrapping; gresTex.repeat.set(1.2,1.2); gresTex.anisotropy=Q==='alta'?8:4;
+// v7: oclusión aproximada en equipos (no llevan lightmap): más oscuro abajo y en caras inferiores,
+// como hace el lightmap en La Grandiella. Solo afecta a la luz IBL del equipo.
+function patchEq(m){
+  if(!m||m.userData.eq) return; m.userData.eq=true;
+  m.onBeforeCompile=sh=>{
+    sh.vertexShader='varying vec3 vWP; varying vec3 vWN;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n vWP=(modelMatrix*vec4(transformed,1.0)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal);');
+    sh.fragmentShader='varying vec3 vWP; varying vec3 vWN;\n'+sh.fragmentShader.replace('#include <lights_fragment_maps>','#include <lights_fragment_maps>\n float eqOcc=mix(0.45,1.0,smoothstep(0.02,1.0,vWP.y))*mix(0.6,1.0,clamp(vWN.y*0.5+0.5,0.0,1.0)); iblIrradiance*=eqOcc; radiance*=0.92*eqOcc;');
+  };
+  m.customProgramCacheKey=()=>'eqOcc';
+}
 kitchen.updateMatrixWorld(true);
 kitchen.traverse(o=>{
   if(!o.isMesh) return;
@@ -210,6 +242,8 @@ kitchen.traverse(o=>{
       mm.emissiveIntensity=mm.userData.emis0=0.45;
       mm.toneMapped=true;
       emisMats.push(mm);
+    } else if(n==='display'){ mm.emissive=new THREE.Color(0x1d6f8f); mm.emissiveIntensity=0.6; mm.roughness=0.2; mm.metalness=0;
+    } else if(n==='aluminio'){ mm.metalness=0.85; mm.roughness=0.34; if(mm.color) mm.color.setRGB(0.80,0.81,0.82); mm.envMapIntensity=0.8;
     } else if(/inox|chrome|cromo|metal|hierro|lat[oó]n|cast|brass|umbral/.test(n)){
       if(mm.metalness!==undefined){
         const iron=/hierro|cast|fundid/.test(n);
@@ -221,9 +255,9 @@ kitchen.traverse(o=>{
         else if(brass){ mm.metalness=0.9; mm.roughness=0.25; if(mm.color) mm.color.setRGB(0.72,0.50,0.16); mm.envMapIntensity=1.05; }
         else if(chrome){ mm.metalness=0.95; mm.roughness=0.12; if(mm.color) mm.color.setRGB(0.86,0.87,0.89); mm.envMapIntensity=1.2; }
         else if(pol){ mm.metalness=0.94; mm.roughness=0.16; if(mm.color) mm.color.setRGB(0.84,0.85,0.87); mm.envMapIntensity=1.15; }
-        else if(body){ mm.metalness=0.9; mm.roughness=0.32; if(mm.color) mm.color.setRGB(0.74,0.76,0.78); mm.envMapIntensity=0.95; }
-        else if(n.includes('campana')){ mm.metalness=0.92; mm.roughness=0.20; if(mm.color) mm.color.setRGB(0.80,0.81,0.83); mm.envMapIntensity=1.1; }
-        else { mm.metalness=0.92; mm.roughness=0.22; if(mm.color) mm.color.setRGB(0.80,0.81,0.83); mm.envMapIntensity=1.05; }
+        else if(body){ mm.metalness=0.92; mm.roughness=0.32; if(mm.color) mm.color.setRGB(0.78,0.80,0.82); mm.envMapIntensity=0.8; }
+        else if(n.includes('campana')){ mm.metalness=0.92; mm.roughness=0.22; if(mm.color) mm.color.setRGB(0.78,0.80,0.82); mm.envMapIntensity=0.8; }
+        else { mm.metalness=0.92; mm.roughness=0.28; if(mm.color) mm.color.setRGB(0.78,0.80,0.82); mm.envMapIntensity=0.8; }
         // no mapas de rugosidad (vetas); el contraste viene de la forma y del IBL
         mm.normalMap=null; mm.roughnessMap=null; mm.bumpMap=null;
         if(mm.map && !iron && !brass) mm.map=null;
@@ -232,6 +266,10 @@ kitchen.traverse(o=>{
       const dark=n.includes('horno')||n.includes('scr')||(o.name||'').includes('GLASS')&&(o.name||'').includes('SCC');
       return new THREE.MeshPhysicalMaterial({color:dark?0x14161a:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:dark?0.35:0.14,envMapIntensity:0.95,depthWrite:false,side:THREE.DoubleSide});
     }
+    if(n==='floor'){ mm.map=gresTex; if(mm.color) mm.color.setRGB(0.59,0.33,0.25); mm.normalMap=null; mm.roughnessMap=null; mm.metalnessMap=null; mm.roughness=0.6; mm.metalness=0; }
+    if(!isArchLM && !emisMats.includes(mm) && mm.isMeshStandardMaterial) patchEq(mm);
+    // filtros de lamas de la campana: acero inoxidable, no fundición negra (la panza de la campana se veía negra)
+    if(isCampana && /hierro/.test(n) && mm.color){ mm.color.setRGB(0.66,0.68,0.70); mm.metalness=0.9; mm.roughness=0.36; mm.envMapIntensity=0.95; }
     return mm;
   });
   if(Array.isArray(o.material)&&o.material.length===1) o.material=o.material[0];
@@ -263,6 +301,26 @@ kitchen.traverse(o=>{
   if((isCeilToma||outsideFloor||isWallHung) && !hideAerial.includes(o) && !isHood && !nml.startsWith('door_mark')) hideAerial.push(o);
   if((isWallHung||(outsideFloor&&(nml.startsWith('u_')||isWallHung))) && !hideWalls.includes(o)) hideWalls.push(o);
 });
+// v7: tomas de la isla que en el plano no tienen muro ni equipo detrás quedaban flotando.
+// Supuesto: suben desde el suelo por un tubo de acero de 25 mm (canalización vista habitual en islas).
+const conduits=[];
+(function addConduits(){
+  const G=new Map();
+  kitchen.traverse(o=>{ if(!o.isMesh||!o.visible) return; const m=/^U_(\d+)_([A-Z]+)/.exec(o.name||''); if(!m||/DESAG/i.test(o.name)) return;
+    const k=m[1]; const b=new THREE.Box3().setFromObject(o); if(!G.has(k)) G.set(k,b.clone()); else G.get(k).union(b); });
+  const R=(CFG.aabbs||[]);
+  const near=(x,y,e)=>R.some(r=>x>r[0]-e&&x<r[2]+e&&y>r[1]-e&&y<r[3]+e);
+  const mat=new THREE.MeshStandardMaterial({color:new THREE.Color(0.78,0.80,0.82),metalness:0.92,roughness:0.3,envMapIntensity:0.8}); patchEq(mat);
+  for(const [k,b] of G){
+    const z0=b.min.y, z1=b.max.y; if(z0<0.08||z1>2.3) continue;
+    const c=b.getCenter(new THREE.Vector3()); const p=T2B(c);
+    if(near(p.x,p.y,0.06)) continue;
+    if(!(p.x>-2.9&&p.x<0.3&&p.y>-1.7&&p.y<2.4)) continue; // solo la isla central; las de muro van en el muro
+    const h=z0; const cyl=new THREE.Mesh(new THREE.CylinderGeometry(0.0125,0.0125,h,12),mat);
+    cyl.position.set(c.x,h/2,c.z); cyl.name='V7_CONDUIT_U_'+k; scene.add(cyl); conduits.push(cyl);
+    const ring=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.006,16),mat); ring.position.set(c.x,0.003,c.z); scene.add(ring); conduits.push(ring);
+  }
+})();
 // Sin PointLights: la luz de arquitectura viene del lightmap. El IBL ilumina el inox.
 
 // Sombras de contacto bajo equipos (decals suaves sobre el suelo)
@@ -292,7 +350,7 @@ kitchen.traverse(o=>{
   scene.add(grp);
 })();
 
-let wallsHidden=false;
+let wallsHidden=false, hoodsHidden=false;
 function collideRects(){
   return wallsHidden ? (CFG.aabbEquip||[]) : (CFG.aabbs||[]);
 }
@@ -300,7 +358,7 @@ function applyVisibility(){
   const aerialNow=mode==='aerial' && !renderer.xr.isPresenting;
   for(const o of hideWalls) o.visible=!wallsHidden;
   for(const o of hideFootprints) o.visible=!!wallsHidden;
-  for(const o of hideHoods) o.visible=!wallsHidden;
+  for(const o of hideHoods) o.visible=!wallsHidden && !(hoodsHidden && !/ls9p/i.test(o.name)); // la capota del lavavajillas LS9P es parte de la máquina, no campana
   for(const o of hideAerial) o.visible= aerialNow ? false : !wallsHidden;
   for(const o of hideAlways) o.visible=false;
 }
@@ -316,7 +374,14 @@ function setWallsHidden(h){
   if(vrWallLabel) vrWallLabel.textContent=wallsHidden?'Mostrar paredes':'Ocultar paredes';
   if(mode==='aerial' && !renderer.xr.isPresenting) frameAerial();
 }
-$('bwalls').onclick=()=>setWallsHidden(!wallsHidden);
+bindPress($('bwalls'),'walls',()=>setWallsHidden(!wallsHidden));
+// v7: botón de campana (todas: isla, hornos y lavavajillas). Sin colisión propia; el lightmap se horneó sin campanas.
+function setHoodsHidden(h){
+  hoodsHidden=!!h; applyVisibility();
+  const b=$('bhood'); b.textContent=hoodsHidden?'Mostrar campana':'Ocultar campana'; b.classList.toggle('on',hoodsHidden); b.setAttribute('aria-pressed',hoodsHidden?'true':'false');
+  if(vrHoodLabel) vrHoodLabel.textContent=hoodsHidden?'Mostrar campana':'Ocultar campana';
+}
+bindPress($('bhood'),'hood',()=>setHoodsHidden(!hoodsHidden));
 
 let expo=1, curMode=null, modeBusy=false;
 async function setLightMode(k){
@@ -342,7 +407,7 @@ async function setLightMode(k){
     curMode=k;
   } finally { modeBusy=false; }
 }
-document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>setLightMode(b.dataset.m));
+document.querySelectorAll('[data-m]').forEach(b=>bindPress(b,'mode',()=>setLightMode(b.dataset.m)));
 await setLightMode(MODE0);
 
 
@@ -353,150 +418,102 @@ function blocked(x,y){
   for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; }
   return false;
 }
+// ===== Controles v7: copiados del visor de La Grandiella (referencia) =====
+// Convención (igual que Grandiella): rig.rotation.y=yaw; la cámara mira -Z de three.
+// Dirección de la vista en planta (x,y Blender) = (-sin yaw, cos yaw); derecha = (cos yaw, sin yaw).
 const CEIL=CFG.ceiling||3.0;
-const spawn=CFG.spawn||{x:0,y:0,z:1.62};
+const EYE=1.62;
+const spawn=CFG.spawn||{x:0,y:0,z:1.62,yaw:0};
 let mode='aerial'; // aerial | walk
 let pos={x:spawn.x, y:spawn.y};
-let yaw=Math.PI/2, pitch=0; // mira hacia +X (isla / cámaras)
+let yaw=spawn.yaw||0, pitch=-0.08;
 const keys={};
-const vel={x:0,y:0};
 function applyRig(){
   rig.position.copy(B2T(pos.x,pos.y,0));
-  rig.rotation.set(0, yaw, 0);
-  camera.rotation.set(pitch, 0, 0);
+  rig.rotation.set(0,yaw,0);
+  if(!renderer.xr.isPresenting){ camera.position.set(0,EYE,0); camera.rotation.set(pitch,0,0,'YXZ'); }
 }
 applyRig();
-
-function setCeilingVisible(v){
-  applyVisibility();
-}
+function move(dx,dy){ if(!blocked(pos.x+dx,pos.y)) pos.x+=dx; if(!blocked(pos.x,pos.y+dy)) pos.y+=dy; }
 function setMode(m){
   mode=m;
   $('baer').classList.toggle('on', m==='aerial');
   $('bwalk').classList.toggle('on', m==='walk');
+  orbit.enabled=(m==='aerial');
   $('joy').style.display=(m==='walk'&&isTouch)?'block':'none';
   $('hint').textContent=m==='aerial'
     ? 'Vista aérea · arrastra para girar · doble clic en el suelo para entrar andando'
     : 'Pasear · W A S D / flechas · arrastra para mirar'+(isTouch?' · joystick para andar':'');
-  orbit.enabled=(m==='aerial');
-  setCeilingVisible(m!=='aerial' || renderer.xr.isPresenting);
+  applyVisibility();
 }
 function goXY(x,y,lookYaw){
   if(!blocked(x,y)){ pos.x=x; pos.y=y; }
   if(lookYaw!=null) yaw=lookYaw;
-  applyRig();
-  setMode('walk');
+  pitch=-0.08; applyRig(); setMode('walk');
 }
 function goRoom(r){ if(!r) return; goXY(r.x, r.y, r.yaw||0); $('mmroom').textContent=r.name; }
-
-// rooms buttons
 const roomsEl=$('rooms');
 for(const r of (CFG.rooms||[])){
   const b=document.createElement('button'); b.className='b'; b.textContent=r.name;
-  b.onclick=()=>goRoom(r); roomsEl.appendChild(b);
+  bindPress(b,'room',()=>{ goRoom(r); $('panel').hidden=true; }); roomsEl.appendChild(b);
 }
+bindPress($('bopt'),'opt',()=>{$('panel').hidden=!$('panel').hidden;});
+bindPress($('baer'),'aer',()=>{ setMode('aerial'); resetAerial(); });
+bindPress($('bwalk'),'walk',()=>goRoom((CFG.rooms||[])[0]||{x:spawn.x,y:spawn.y,yaw:spawn.yaw}));
+bindPress($('bplan'),'plan',()=>{$('plan').hidden=false; requestAnimationFrame(()=>{pfit(); pdraw();});});
+bindPress($('pclose'),'pclose',()=>{$('plan').hidden=true;});
+document.querySelectorAll('[data-q]').forEach(b=>{ b.classList.toggle('on',b.dataset.q===Q);
+  b.onclick=()=>{ const u=new URL(location.href); u.searchParams.set('q', b.dataset.q); location.href=u.toString(); }; });
+addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='Escape') $('plan').hidden=true; });
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 
-$('bopt').onclick=()=>$('panel').hidden=!$('panel').hidden;
-$('baer').onclick=()=>{ setMode('aerial'); resetAerial(); };
-$('bwalk').onclick=()=>{ setMode('walk'); applyRig(); };
-$('bplan').onclick=()=>{$('plan').hidden=false; requestAnimationFrame(()=>{pfit(); pdraw();});};
-$('pclose').onclick=()=>$('plan').hidden=true;
-document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{
-  const u=new URL(location.href); u.searchParams.set('q', b.dataset.q); location.href=u.toString();
-});
-
-// mouse look (walk) / inverted touch already on orbit
+// Arrastre: igual que Grandiella. Táctil invertido (TOUCH_DIR=1, se «agarra» la escena), ratón directo.
 const TOUCH_DIR=1;
-const cv=$('c');
-orbit.rotateSpeed=1;
-cv.addEventListener('pointerdown',e=>{
-  if(mode==='aerial'){ orbit.rotateSpeed=(e.pointerType==='touch'&&TOUCH_DIR===1)?-1:1; }
-},{capture:true});
+const cv=renderer.domElement;
+let drag=null;
+cv.addEventListener('pointerdown',e=>{ orbit.rotateSpeed=(e.pointerType==='touch'&&TOUCH_DIR===1)?-1:1; },{capture:true});
+cv.addEventListener('pointerdown',e=>{ if(mode!=='walk') return; drag={x:e.clientX,y:e.clientY,id:e.pointerId,s:(e.pointerType==='touch'?-TOUCH_DIR:1)}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
+cv.addEventListener('pointermove',e=>{ if(!drag||drag.id!==e.pointerId) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; yaw-=drag.s*dx*0.0045; pitch=THREE.MathUtils.clamp(pitch-drag.s*dy*0.0035,-1.3,1.3); applyRig(); });
+cv.addEventListener('pointerup',e=>{ if(drag&&drag.id===e.pointerId) drag=null; });
+cv.addEventListener('pointercancel',e=>{ if(drag&&drag.id===e.pointerId) drag=null; });
 
-let dragging=false, lx=0, ly=0;
-cv.addEventListener('pointerdown', e=>{
-  if(mode!=='walk' || renderer.xr.isPresenting) return;
-  if(e.pointerType==='touch' && e.clientX<140 && e.clientY>innerHeight-180) return; // joystick
-  dragging=true; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId);
-});
-cv.addEventListener('pointermove', e=>{
-  if(!dragging || mode!=='walk') return;
-  const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
-  const s=(e.pointerType==='touch'? TOUCH_DIR: 1);
-  yaw -= dx*0.005*s;
-  pitch -= dy*0.005*s;
-  pitch=Math.max(-1.2, Math.min(1.2, pitch));
-  applyRig();
-});
-cv.addEventListener('pointerup',()=>dragging=false);
+// Joystick (igual que Grandiella): arriba = adelante
+const joy=$('joy'), knob=$('knob'); let jv={x:0,y:0}, jid=null;
+function jmove(e){ const r=joy.getBoundingClientRect(); let x=(e.clientX-r.left-60)/50, y=(e.clientY-r.top-60)/50; const L=Math.hypot(x,y); if(L>1){x/=L;y/=L;} jv={x,y}; knob.style.left=(35+x*40)+'px'; knob.style.top=(35+y*40)+'px'; }
+joy.addEventListener('pointerdown',e=>{ e.stopPropagation(); jid=e.pointerId; try{joy.setPointerCapture(e.pointerId);}catch(_){} jmove(e); });
+joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) jmove(e); });
+const jend=e=>{ if(e.pointerId===jid){ jid=null; jv={x:0,y:0}; knob.style.left='35px'; knob.style.top='35px'; } };
+joy.addEventListener('pointerup',jend); joy.addEventListener('pointercancel',jend);
 
-window.addEventListener('keydown',e=>{ keys[e.code]=true; });
-window.addEventListener('keyup',e=>{ keys[e.code]=false; });
+// Doble clic en la vista aérea: entrar andando ahí, mirando en la dirección de la vista aérea
+cv.addEventListener('dblclick',e=>{ if(mode!=='aerial') return; const rc=new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),aerial);
+  const pl=new THREE.Plane(new THREE.Vector3(0,1,0),0); const hit=new THREE.Vector3();
+  if(rc.ray.intersectPlane(pl,hit)){ const b=T2B(hit); if(!blocked(b.x,b.y)){ pos.x=b.x; pos.y=b.y; const d=hit.clone().sub(aerial.position); yaw=Math.atan2(-d.x,-d.z); pitch=-0.05; applyRig(); setMode('walk'); } } });
 
-// joystick
-const joy=$('joy'), knob=$('knob');
-let jx=0, jy=0, jid=null;
-function jset(cx,cy){
-  const r=joy.getBoundingClientRect(), dx=cx-(r.left+r.width/2), dy=cy-(r.top+r.height/2);
-  const m=Math.hypot(dx,dy), max=40, k=m>max?max/m:1;
-  jx=(dx*k)/max; jy=(dy*k)/max;
-  knob.style.left=(35+dx*k)+'px'; knob.style.top=(35+dy*k)+'px';
-}
-joy.addEventListener('pointerdown',e=>{ jid=e.pointerId; joy.setPointerCapture(e.pointerId); jset(e.clientX,e.clientY); });
-joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) jset(e.clientX,e.clientY); });
-joy.addEventListener('pointerup',()=>{ jid=null; jx=0; jy=0; knob.style.left='35px'; knob.style.top='35px'; });
-
-// double click to walk
-const rc=new THREE.Raycaster();
-function pickGround(cx,cy){
-  const ndc=new THREE.Vector2((cx/innerWidth)*2-1, -(cy/innerHeight)*2+1);
-  const cam=(mode==='aerial'&&!renderer.xr.isPresenting)?aerial:camera;
-  rc.setFromCamera(ndc, cam);
-  const hits=rc.intersectObject(kitchen, true);
-  for(const h of hits){ if(h.point.y<0.4){ const b=T2B(h.point); return b; } }
-  // plane y=0
-  const pl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
-  const p=new THREE.Vector3(); if(rc.ray.intersectPlane(pl,p)) return T2B(p);
-  return null;
-}
-cv.addEventListener('dblclick',e=>{
-  const p=pickGround(e.clientX,e.clientY); if(!p) return;
-  if(!blocked(p.x,p.y)) goXY(p.x,p.y);
-});
-
-// minimap
+// Minimapa: posición y cono de visión desde la cámara real (como Grandiella)
 const mm=$('mmc'); const mmx=mm.getContext('2d');
 const mmImg=new Image(); let mmReady=false;
 mmImg.onload=()=>{ mm.width=mmImg.width; mm.height=mmImg.height; mmReady=true; };
 if(CFG.minimap) mmImg.src=CFG.minimap;
-function worldToMM(x,y){
-  const b=CFG.mmBounds||CFG.world; // in CAD? we'll store blender meters bounds
-  const r=CFG.mmWorld; // {x0,y0,x1,y1} blender
-  if(!r) return [mm.width/2, mm.height/2];
-  const u=(x-r.x0)/(r.x1-r.x0), v=(r.y1-y)/(r.y1-r.y0);
-  return [u*mm.width, v*mm.height];
-}
-function mmToWorld(mx,my){
-  const r=CFG.mmWorld; if(!r) return {x:0,y:0};
-  const u=mx/mm.width, v=my/mm.height;
-  return {x:r.x0+u*(r.x1-r.x0), y:r.y1-v*(r.y1-r.y0)};
-}
+function worldToMM(x,y){ const r=CFG.mmWorld; if(!r) return [mm.width/2, mm.height/2]; return [(x-r.x0)/(r.x1-r.x0)*mm.width, (r.y1-y)/(r.y1-r.y0)*mm.height]; }
+function mmToWorld(mx,my){ const r=CFG.mmWorld; if(!r) return {x:0,y:0}; return {x:r.x0+mx/mm.width*(r.x1-r.x0), y:r.y1-my/mm.height*(r.y1-r.y0)}; }
+function roomAt(x,y){ let best=null,bd=1e9; for(const r of (CFG.rooms||[])){ if(r.rect){ const q=r.rect; if(x>=q[0]&&x<=q[2]&&y>=q[1]&&y<=q[3]) return r; } } return null; }
 function drawMM(){
   if(!mmReady){ mm.width=280; mm.height=200; mmx.fillStyle='#eee'; mmx.fillRect(0,0,mm.width,mm.height); }
-  else { mmx.drawImage(mmImg,0,0,mm.width,mm.height); }
-  const [px,py]=worldToMM(pos.x,pos.y);
-  mmx.fillStyle='#c22'; mmx.beginPath(); mmx.arc(px,py,5,0,6.3); mmx.fill();
-  mmx.strokeStyle='#c22'; mmx.beginPath(); mmx.moveTo(px,py);
-  // yaw: blender yaw 0 looks +Y? We set rig.rotation.y = yaw, camera looks -Z in three after yaw.
-  // three -Z is blender +Y. So yaw 0 looks +Y blender. minimap up is +Y if v decreases with y.
-  const a=-yaw-Math.PI/2;
-  mmx.lineTo(px+12*Math.cos(a), py+12*Math.sin(a)); mmx.stroke();
+  else mmx.drawImage(mmImg,0,0,mm.width,mm.height);
+  let x,y,a=null;
+  if(mode==='aerial'&&!renderer.xr.isPresenting){ x=orbit.target.x; y=-orbit.target.z; }
+  else { const hw=new THREE.Vector3(); camera.getWorldPosition(hw); x=hw.x; y=-hw.z; const d=new THREE.Vector3(); camera.getWorldDirection(d); a=Math.atan2(-d.z,d.x); }
+  const [px,py]=worldToMM(x,y); const S=mm.width/300;
+  mmx.save(); mmx.translate(px,py);
+  if(a!==null){ mmx.rotate(-a); mmx.fillStyle='rgba(220,60,30,0.35)'; mmx.beginPath(); mmx.moveTo(0,0); mmx.arc(0,0,38*S,-0.5,0.5); mmx.fill(); }
+  mmx.fillStyle='#d23'; mmx.strokeStyle='#fff'; mmx.lineWidth=3*S; mmx.beginPath(); mmx.arc(0,0,9*S,0,7); mmx.fill(); mmx.stroke(); mmx.restore();
 }
-mm.addEventListener('pointerdown',e=>{
+mm.addEventListener('click',e=>{
   const r=mm.getBoundingClientRect(), x=(e.clientX-r.left)*mm.width/r.width, y=(e.clientY-r.top)*mm.height/r.height;
-  const w=mmToWorld(x,y); if(!blocked(w.x,w.y)) goXY(w.x,w.y);
+  const w=mmToWorld(x,y); if(!blocked(w.x,w.y)){ pos.x=w.x; pos.y=w.y; applyRig(); setMode('walk'); } else $('hint').textContent='Ese punto está ocupado (muro o mueble).';
 });
-
 // plan overlay
 const pc=$('pc'), px=pc.getContext('2d');
 const planImg=new Image(); let planReady=false, pscale=1, pox=0, poy=0, pdrag=null;
@@ -526,38 +543,19 @@ pc.addEventListener('pointermove',e=>{ if(!pdrag) return; pox=e.clientX-pdrag.x;
 pc.addEventListener('pointerup',()=>pdrag=null);
 pc.addEventListener('wheel',e=>{ e.preventDefault(); const k=e.deltaY>0?0.9:1.1; pscale*=k; pdraw(); },{passive:false});
 
-// WebXR
-const vrBtn=VRButton.createButton(renderer);
-$('vrslot').appendChild(vrBtn);
-const fac=new XRControllerModelFactory();
-const ctrls=[];
-for(let i=0;i<2;i++){
-  const c=renderer.xr.getController(i);
-  const g=renderer.xr.getControllerGrip(i);
-  g.add(fac.createControllerModel(g));
-  scene.add(c); scene.add(g); ctrls.push(c);
-  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-2)]), new THREE.LineBasicMaterial({color:0x88ccff}));
-  c.add(line);
-  c.addEventListener('selectstart',()=>{ c.userData.sel=true; });
-  c.addEventListener('selectend',()=>{
-    c.userData.sel=false;
-    // primero el panel VR de paredes
-    const o=new THREE.Vector3(), d=new THREE.Vector3();
-    c.getWorldPosition(o); c.getWorldDirection(d);
-    const ray=new THREE.Ray(o,d);
-    if(vrWallMesh){
-      const hit=ray.intersectObject(vrWallMesh,false);
-      if(hit&&hit.length){ setWallsHidden(!wallsHidden); return; }
-    }
-    const p=new THREE.Vector3();
-    if(ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0), p)){
-      const b=T2B(p);
-      if(!blocked(b.x,b.y)){ pos.x=b.x; pos.y=b.y; applyRig(); }
-    }
-  });
-}
+// WebXR (igual que Grandiella): mandos dentro del rig, teletransporte con marca, stick izquierdo anda, derecho gira 30°
+// El botón VR se crea al final, cuando el modelo y los manejadores XR ya están listos (también para el botón del navegador: offerSession).
+const cmf=new XRControllerModelFactory(); const hmf=new XRHandModelFactory();
+const tmark=new THREE.Mesh(new THREE.RingGeometry(0.12,0.16,32), new THREE.MeshBasicMaterial({color:0x8fd18f,side:THREE.DoubleSide,transparent:true,opacity:0.85}));
+tmark.rotation.x=-Math.PI/2; tmark.visible=false; scene.add(tmark);
+const vrBtns=[]; const vrPanel=new THREE.Group();
+(function(){ const bg=new THREE.Mesh(new THREE.PlaneGeometry(0.18,0.08), new THREE.MeshBasicMaterial({color:0x222831,transparent:true,opacity:0.85,side:THREE.DoubleSide})); vrPanel.add(bg);
+  for(const [lab,md,x] of [['día','dia',-0.04],['noche','noche',0.04]]){ const g=new THREE.Mesh(new THREE.PlaneGeometry(0.07,0.05), new THREE.MeshBasicMaterial({color:0x3d5a73,side:THREE.DoubleSide})); g.position.set(x,0,0.01); g.userData.mode=md; vrPanel.add(g); vrBtns.push(g);
+    const c=document.createElement('canvas'); c.width=128;c.height=64; const x2=c.getContext('2d'); x2.fillStyle='#fff'; x2.font='28px sans-serif'; x2.textAlign='center'; x2.fillText(lab,64,42);
+    const tx=new THREE.Mesh(new THREE.PlaneGeometry(0.065,0.032), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,side:THREE.DoubleSide})); tx.position.set(x,0,0.012); vrPanel.add(tx); }
+})();
 // Panel en el mando izquierdo (VR) + botón B/Y del mando
-let vrWallMesh=null, vrWallLabel=null, vrBtnPrev=false;
+let vrWallMesh=null, vrWallLabel=null, vrBtnPrev=false, vrHoodMesh=null, vrHoodLabel=null;
 (function makeVrWallPanel(){
   const cv=document.createElement('canvas'); cv.width=512; cv.height=128;
   const g=cv.getContext('2d');
@@ -575,13 +573,101 @@ let vrWallMesh=null, vrWallLabel=null, vrBtnPrev=false;
   // se engancha al grip 0 al entrar en VR
   window.__vrWallMesh=mesh;
 })();
-renderer.xr.addEventListener('sessionstart',()=>{
-  document.body.classList.add('xr'); setMode('walk');
-  const g=renderer.xr.getControllerGrip(0);
-  if(vrWallMesh && g && vrWallMesh.parent!==g) g.add(vrWallMesh);
-});
-renderer.xr.addEventListener('sessionend',()=>{ document.body.classList.remove('xr'); });
+(function makeVrHoodPanel(){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=128;
+  const g=cv.getContext('2d');
+  function paint(txt){
+    g.fillStyle='#1a2430'; g.fillRect(0,0,512,128);
+    g.strokeStyle='#d7dee6'; g.lineWidth=8; g.strokeRect(4,4,504,120);
+    g.fillStyle='#fff'; g.font='600 48px system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(txt,256,64);
+  }
+  paint('Ocultar campana');
+  const tex=new THREE.CanvasTexture(cv);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(0.18,0.045), new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+  mesh.position.set(0,0.06,-0.14);
+  vrHoodMesh=mesh; vrHoodLabel={set textContent(v){ paint(v); tex.needsUpdate=true; }};
+  // se engancha al grip 0 al entrar en VR
+  
+})();
+for(let i=0;i<2;i++){
+  const c=renderer.xr.getController(i); rig.add(c);
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1)]), new THREE.LineBasicMaterial({color:0x88cc88})); c.add(line); line.visible=false;
+  c.addEventListener('selectstart',()=>{ c.userData.sel=true; c.userData.hb=null; line.visible=true; vrSelBtn(c,i); });
+  c.addEventListener('selectend',()=>{ c.userData.sel=false; line.visible=false; pressUp('vrsel'+i);
+    if(c.userData.hb){ c.userData.hb=null; tmark.visible=false; return; }
+    if(tmark.visible&&tmark.userData.ok){ const x=tmark.position.x,y=-tmark.position.z; const hp=new THREE.Vector3(); camera.getWorldPosition(hp); const off=new THREE.Vector3().subVectors(hp,rig.position); pos.x=x-off.x; pos.y=y+off.z; applyRig(); }
+    tmark.visible=false; });
+  const g=renderer.xr.getControllerGrip(i); g.add(cmf.createControllerModel(g)); rig.add(g);
+  const hnd=renderer.xr.getHand(i); hnd.add(hmf.createHandModel(hnd,'mesh')); rig.add(hnd); // manos también en el rig
+  g.addEventListener('connected',e=>{ g.userData.hand=e.data&&e.data.handedness; }); g.addEventListener('disconnected',()=>{ g.userData.hand=null; });
+  hnd.addEventListener('connected',e=>{ hnd.userData.hand=e.data&&e.data.handedness; }); hnd.addEventListener('disconnected',()=>{ hnd.userData.hand=null; });
+}
 
+// Reloj de muñeca (mano izquierda): esfera con brújula + botones Día/Noche, Paredes, Campana.
+// Con mandos: grip space, 9 cm hacia la muñeca (+Z) y en el dorso (-X en la izquierda). Con manos: articulación 'wrist'.
+const watch=new THREE.Group(); watch.matrixAutoUpdate=false; watch.visible=false; scene.add(watch);
+const wFace=new THREE.Group(); watch.add(wFace);
+const dialCv=document.createElement('canvas'); dialCv.width=dialCv.height=256; const dialTx=new THREE.CanvasTexture(dialCv);
+const strap=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.022,40,1,true), new THREE.MeshStandardMaterial({color:0x1d1f22,roughness:0.7,side:THREE.DoubleSide}));
+strap.position.set(0,0,-0.026); watch.add(strap); // correa alrededor de la muñeca (eje = antebrazo)
+const caseM=new THREE.Mesh(new THREE.CylinderGeometry(0.021,0.021,0.008,40), new THREE.MeshStandardMaterial({color:0xc9ccd0,metalness:0.9,roughness:0.25}));
+caseM.rotation.x=Math.PI/2; caseM.position.z=-0.004; wFace.add(caseM);
+const dial=new THREE.Mesh(new THREE.CircleGeometry(0.019,40), new THREE.MeshBasicMaterial({map:dialTx})); dial.position.z=0.0005; wFace.add(dial);
+function paintDial(){ const g=dialCv.getContext('2d'); g.clearRect(0,0,256,256); g.fillStyle='#10161d'; g.beginPath(); g.arc(128,128,127,0,7); g.fill();
+  g.strokeStyle='#8fa3b5'; g.lineWidth=4; for(let k=0;k<12;k++){ const a=k*Math.PI/6; g.beginPath(); g.moveTo(128+Math.sin(a)*104,128-Math.cos(a)*104); g.lineTo(128+Math.sin(a)*120,128-Math.cos(a)*120); g.stroke(); }
+  // brújula: el norte del plano respecto a donde mira la cabeza
+  const d=new THREE.Vector3(); camera.getWorldDirection(d); const head=Math.atan2(-d.x,-d.z); const a=-head; 
+  g.save(); g.translate(128,128); g.rotate(a); g.fillStyle='#e0483c'; g.beginPath(); g.moveTo(0,-92); g.lineTo(16,0); g.lineTo(-16,0); g.fill(); g.fillStyle='#e8edf2'; g.beginPath(); g.moveTo(0,92); g.lineTo(16,0); g.lineTo(-16,0); g.fill();
+  g.fillStyle='#fff'; g.font='bold 34px sans-serif'; g.textAlign='center'; g.fillText('N',0,-100+28); g.restore();
+  const t=new Date(); g.fillStyle='#d7dee6'; g.font='600 30px sans-serif'; g.textAlign='center'; g.fillText(String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'),128,200); dialTx.needsUpdate=true; }
+// botones pequeños alrededor de la esfera
+vrPanel.scale.setScalar(0.32); vrPanel.position.set(0,0.032,0.002); vrPanel.rotation.set(0,0,0); wFace.add(vrPanel);
+if(vrWallMesh){ vrWallMesh.scale.setScalar(0.26); vrWallMesh.position.set(0,-0.029,0.002); vrWallMesh.rotation.set(0,0,0); wFace.add(vrWallMesh); }
+if(vrHoodMesh){ vrHoodMesh.scale.setScalar(0.26); vrHoodMesh.position.set(0,-0.043,0.002); vrHoodMesh.rotation.set(0,0,0); wFace.add(vrHoodMesh); }
+const vrPhotoMesh=(()=>{ const c=document.createElement('canvas'); c.width=256; c.height=128; const g=c.getContext('2d'); g.fillStyle='#7a2b22'; g.fillRect(0,0,256,128); g.strokeStyle='#fff'; g.lineWidth=8; g.strokeRect(4,4,248,120); g.fillStyle='#fff'; g.font='600 56px system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('📷 Foto',128,66);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(0.04,0.02), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),side:THREE.DoubleSide})); m.position.set(0.042,0,0.002); wFace.add(m); return m; })();
+const W_GRIP=new THREE.Matrix4().makeBasis(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,-1),new THREE.Vector3(-1,0,0)).setPosition(-0.035,0,0.09); // dorso de la muñeca izquierda, 9 cm detrás del grip
+const W_WRIST=new THREE.Matrix4().compose(new THREE.Vector3(0,0.03,0.01), new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0)), new THREE.Vector3(1,1,1));
+let watchAnchor='none', dialT=0;
+function updateWatch(dt){
+  let m=null; watchAnchor='none';
+  for(let i=0;i<2;i++){ const h=renderer.xr.getHand(i); const J=h.joints||{}; const w=J['wrist'], im=J['index-finger-metacarpal'], pm=J['pinky-finger-metacarpal'], mm=J['middle-finger-metacarpal'];
+    if(h.userData.hand==='left'&&w&&w.visible&&im&&pm&&mm){ const P=o=>{ o.updateMatrixWorld(); return new THREE.Vector3().setFromMatrixPosition(o.matrixWorld); };
+      const pw=P(w), along=P(mm).sub(pw).normalize(), across=P(im).sub(P(pm)).normalize(); const dors=new THREE.Vector3().crossVectors(across,along).normalize(); // dorso de la mano izquierda
+      const xax=new THREE.Vector3().crossVectors(along,dors).normalize(); const basis=new THREE.Matrix4().makeBasis(xax,along,dors);
+      m=basis.setPosition(pw.clone().addScaledVector(along,-0.035).addScaledVector(dors,0.028)); watchAnchor='wrist'; break; } }
+  if(!m) for(let i=0;i<2;i++){ const g=renderer.xr.getControllerGrip(i); if(g.userData.hand==='left'&&g.visible){ g.updateMatrixWorld(); m=g.matrixWorld.clone().multiply(W_GRIP); watchAnchor='grip'; break; } }
+  watch.visible=!!m; if(m){ watch.matrix.copy(m); watch.updateMatrixWorld(true); }
+  dialT-=dt; if(dialT<=0){ paintDial(); dialT=0.15; }
+}
+// Gatillo/pinza sobre un botón del reloj: se decide con la pose del frame (no la del evento), espera 70 ms, un cambio, bloqueo hasta soltar.
+function vrSelBtn(c,i){ if(c.userData.hb) return; c.updateMatrixWorld(true); const hb=vrHit(c); if(!hb) return; c.userData.hb=hb; tmark.visible=false; const k='vrsel'+i;
+  if(hb===vrWallMesh) pressDown(k,'walls',()=>setWallsHidden(!wallsHidden)); else if(hb===vrHoodMesh) pressDown(k,'hood',()=>setHoodsHidden(!hoodsHidden)); else if(hb===vrPhotoMesh) pressDown(k,'photo',takePhoto); else pressDown(k,'mode',()=>setLightMode(hb.userData.mode)); }
+function vrHit(c){ const m=c.matrixWorld; const o=new THREE.Vector3().setFromMatrixPosition(m); const d=new THREE.Vector3(0,0,-1).transformDirection(m); const r=new THREE.Raycaster(o,d,0,3); const h=r.intersectObjects([...vrBtns,vrWallMesh,vrHoodMesh,vrPhotoMesh].filter(Boolean),false); return h.length?h[0].object:null; }
+renderer.xr.addEventListener('sessionstart',()=>{ document.body.classList.add('xr'); if(mode==='aerial'){ const r=(CFG.rooms||[])[0]||spawn; pos.x=r.x; pos.y=r.y; yaw=r.yaw||0; } mode='walk'; orbit.enabled=false; pitch=0; camera.rotation.set(0,0,0); applyRig(); applyVisibility(); });
+renderer.xr.addEventListener('sessionend',()=>{ document.body.classList.remove('xr'); applyRig(); applyVisibility(); });
+const btnPrev={};
+// Giro (stick derecho): el rig gira alrededor de la cabeza, no del centro del rig.
+function turnAroundHead(da){ const hp=new THREE.Vector3(); camera.getWorldPosition(hp); const off=hp.clone().sub(rig.position); off.applyAxisAngle(new THREE.Vector3(0,1,0),da); yaw+=da; const np=hp.sub(off); pos.x=np.x; pos.y=-np.z; applyRig(); }
+function xrUpdate(dt){
+  const s=renderer.xr.getSession(); if(!s) return; updateWatch(dt);
+  for(let i=0;i<2;i++){
+    const c=renderer.xr.getController(i);
+    if(c.userData.sel) vrSelBtn(c,i);
+    if(c.userData.sel&&!c.userData.hb){ const m=c.matrixWorld; const o=new THREE.Vector3().setFromMatrixPosition(m); const d=new THREE.Vector3(0,0,-1).transformDirection(m);
+      const ray=new THREE.Raycaster(o,d,0,8); const gnd=new THREE.Plane(new THREE.Vector3(0,1,0),0); const hit=new THREE.Vector3();
+      if(ray.ray.intersectPlane(gnd,hit)){ const b=T2B(hit); const ok=!blocked(b.x,b.y); tmark.position.copy(hit); tmark.position.y=0.01; tmark.material.color.set(ok?0x8fd18f:0xd06060); tmark.userData.ok=ok; tmark.visible=true; } }
+  }
+  for(const src of s.inputSources){ if(!src.gamepad||!src.handedness) continue; const gp=src.gamepad, hand=src.handedness;
+    if(gp.axes&&gp.axes.length>=2){ const ax=gp.axes[2]??gp.axes[0], ay=gp.axes[3]??gp.axes[1];
+      if(hand==='left'&&(Math.abs(ax)>0.15||Math.abs(ay)>0.15)){ const sp=1.5*dt; const hd=new THREE.Vector3(); camera.getWorldDirection(hd); let fx=hd.x, fy=-hd.z; const L=Math.hypot(fx,fy); if(L<1e-3){ fx=-Math.sin(yaw); fy=Math.cos(yaw); } else { fx/=L; fy/=L; } /* adelante = hacia donde mira la cabeza; derecha = (fy,-fx) */ move((fx*(-ay)+fy*ax)*sp,(fy*(-ay)-fx*ax)*sp); applyRig(); }
+      if(hand==='right'&&Math.abs(ax)>0.7){ const k=hand+'snap'; if(!btnPrev[k]){ turnAroundHead(-Math.sign(ax)*Math.PI/6); btnPrev[k]=true; } } else btnPrev[hand+'snap']=false; }
+    // Espera de activación 70 ms, un cambio por pulsación, bloqueo hasta soltar. A (dcha): Día/Noche · X (izda): campana · B (dcha): foto · Y (izda): paredes
+    const a=gp.buttons[4], ka='gp'+hand+'a'; if(a&&a.pressed){ if(hand==='right') pressDown(ka,'mode',()=>{ const L=Object.keys(CFG.modes); setLightMode(L[(L.indexOf(curMode)+1)%L.length]); }); else pressDown(ka,'hood',()=>setHoodsHidden(!hoodsHidden)); } else pressUp(ka);
+    const b=gp.buttons[5], kb='gp'+hand+'b'; if(b&&b.pressed){ if(hand==='right') pressDown(kb,'photo',takePhoto); else pressDown(kb,'walls',()=>setWallsHidden(!wallsHidden)); } else pressUp(kb);
+  }
+}
 
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
@@ -590,61 +676,95 @@ window.addEventListener('resize',()=>{
   if(!$('plan').hidden) pfit();
 });
 
+// Paso de marcha (mismo cálculo que Grandiella): f adelante, s derecha, sp metros
+function walkStep(f,s,sp){ if(f||s){ const fx=-Math.sin(yaw), fy=Math.cos(yaw); move((fx*f+Math.cos(yaw)*s)*sp,(fy*f+Math.sin(yaw)*s)*sp); } }
+
+// ===== Fotos (también desde VR): cámara del ojo izquierdo -> WebGLRenderTarget 1920 px -> JPG -> IndexedDB local =====
+const PH_W=1920, PH_H=1080; let photoRT=null, photoPending=false, photoCam=new THREE.PerspectiveCamera(70,PH_W/PH_H,0.05,200);
+function dbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open('vasco_fotos',1); r.onupgradeneeded=()=>r.result.createObjectStore('fotos',{keyPath:'id',autoIncrement:true}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function dbAll(){ const db=await dbOpen(); return new Promise(res=>{ const q=db.transaction('fotos').objectStore('fotos').getAll(); q.onsuccess=()=>res(q.result||[]); }); }
+async function dbPut(o){ const db=await dbOpen(); return new Promise(res=>{ const t=db.transaction('fotos','readwrite'); const q=t.objectStore('fotos').add(o); q.onsuccess=()=>res(q.result); }); }
+async function dbDel(id){ const db=await dbOpen(); return new Promise(res=>{ const t=db.transaction('fotos','readwrite'); t.objectStore('fotos').delete(id); t.oncomplete=()=>res(); }); }
+async function galCount(){ try{ const n=(await dbAll()).length; $('galn').textContent=n?'('+n+')':''; return n; }catch(e){ return 0; } }
+function takePhoto(){ photoPending=true; }
+const flashM=new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthTest:false,depthWrite:false})); flashM.position.z=-0.3; flashM.renderOrder=999; flashM.visible=false; camera.add(flashM);
+let flashT=0;
+function shotName(ts){ const d=new Date(ts), z=n=>String(n).padStart(2,'0'); return 'vasco_'+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'_'+z(d.getHours())+z(d.getMinutes())+z(d.getSeconds())+'.jpg'; }
+function doPhoto(){
+  photoPending=false;
+  if(!photoRT){ photoRT=new THREE.WebGLRenderTarget(PH_W,PH_H,{samples:4}); const pr=renderer.getRenderTarget(); const xe=renderer.xr.enabled; renderer.xr.enabled=false; renderer.setRenderTarget(photoRT); renderer.clear(); renderer.setRenderTarget(pr); renderer.xr.enabled=xe;
+    // Truco: marcarlo como destino XR hace que three aplique el mismo tone mapping (AgX) y la salida sRGB que en pantalla.
+    photoRT.isXRRenderTarget=true; photoRT.texture.colorSpace=THREE.SRGBColorSpace; }
+  let src;
+  if(renderer.xr.isPresenting){ const xc=renderer.xr.getCamera(); src=(xc.cameras&&xc.cameras[0])||xc; }
+  else src=(mode==='aerial')?aerial:camera;
+  src.updateMatrixWorld(); src.matrixWorld.decompose(photoCam.position,photoCam.quaternion,new THREE.Vector3());
+  photoCam.fov=renderer.xr.isPresenting?75:(src.fov||70); photoCam.aspect=PH_W/PH_H; photoCam.updateProjectionMatrix(); photoCam.updateMatrixWorld();
+  const hideL=[watch,tmark,flashM]; const vis=hideL.map(o=>o.visible); hideL.forEach(o=>o.visible=false);
+  const ctr=[]; for(let i=0;i<2;i++){ for(const o of [renderer.xr.getController(i),renderer.xr.getControllerGrip(i),renderer.xr.getHand(i)]){ ctr.push([o,o.visible]); o.visible=false; } }
+  const pr=renderer.getRenderTarget(); const xe=renderer.xr.enabled; renderer.xr.enabled=false;
+  renderer.setRenderTarget(photoRT); renderer.clear(); renderer.render(scene,photoCam);
+  const buf=new Uint8Array(PH_W*PH_H*4); renderer.readRenderTargetPixels(photoRT,0,0,PH_W,PH_H,buf);
+  renderer.setRenderTarget(pr); renderer.xr.enabled=xe;
+  hideL.forEach((o,i)=>o.visible=vis[i]); ctr.forEach(([o,v])=>o.visible=v);
+  const cv2=document.createElement('canvas'); cv2.width=PH_W; cv2.height=PH_H; const g=cv2.getContext('2d'); const im=g.createImageData(PH_W,PH_H);
+  for(let y=0;y<PH_H;y++){ im.data.set(buf.subarray((PH_H-1-y)*PH_W*4,(PH_H-y)*PH_W*4),y*PH_W*4); }
+  for(let k=3;k<im.data.length;k+=4) im.data[k]=255;
+  g.putImageData(im,0,0);
+  const ts=Date.now(); const where=($('mmroom')&&$('mmroom').textContent)||'';
+  g.fillStyle='#0008'; g.fillRect(0,PH_H-44,PH_W,44); g.fillStyle='#fff'; g.font='24px sans-serif'; g.fillText('Geriátrico El Vasco · '+where+' · '+new Date(ts).toLocaleString('es-ES'),16,PH_H-14);
+  cv2.toBlob(async b=>{ if(!b) return; await dbPut({ts,blob:b,where,xr:renderer.xr.isPresenting}); const n=await galCount(); window.__gv.lastPhoto={ts,size:b.size,n};
+    if(renderer.xr.isPresenting){ flashM.visible=true; flashM.material.opacity=0.85; flashT=0.35; if(vrHoodLabel) {} } else { const f=$('flash'); f.style.opacity='0.85'; setTimeout(()=>f.style.opacity='0',120); toast('Foto guardada ('+n+'). Míralas en «Fotos».'); } },'image/jpeg',0.9);
+}
+bindPress($('bshot'),'photo',takePhoto);
+const galURLs=[];
+async function openGal(){ $('gal').hidden=false; const g=$('ggrid'); g.innerHTML=''; galURLs.splice(0).forEach(u=>URL.revokeObjectURL(u)); const L=(await dbAll()).sort((a,b)=>b.ts-a.ts);
+  if(!L.length) g.innerHTML='<p>Aún no hay fotos. Pulsa «📷 Foto» (o B en el mando derecho / botón Foto del reloj en VR).</p>';
+  for(const f of L){ const u=URL.createObjectURL(f.blob); galURLs.push(u); const fig=document.createElement('figure'); const nm=shotName(f.ts);
+    fig.innerHTML='<a href="'+u+'" download="'+nm+'"><img src="'+u+'" alt="foto"></a><figcaption><span>'+new Date(f.ts).toLocaleString('es-ES')+(f.xr?' · VR':'')+'</span><span><a class="b" href="'+u+'" download="'+nm+'">Descargar</a> <button class="b" data-del="'+f.id+'">Borrar</button></span></figcaption>';
+    g.appendChild(fig); }
+  g.querySelectorAll('[data-del]').forEach(b=>bindPress(b,'del',async()=>{ await dbDel(+b.dataset.del); await galCount(); openGal(); })); }
+bindPress($('bgal'),'gal',openGal); bindPress($('gclose'),'gclose',()=>{ $('gal').hidden=true; });
+bindPress($('gall'),'gall',async()=>{ const L=await dbAll(); for(const f of L){ const a=document.createElement('a'); a.href=URL.createObjectURL(f.blob); a.download=shotName(f.ts); document.body.appendChild(a); a.click(); a.remove(); await new Promise(r=>setTimeout(r,250)); } });
+galCount();
+renderer.xr.addEventListener('sessionend',()=>{ galCount().then(n=>{ if(n) toast('Tienes '+n+' foto(s). Ábrelas en «Fotos» para verlas y descargarlas.',3500); }); });
 const clock=new THREE.Clock();
 let fpsN=0,fpsT=0;
 renderer.setAnimationLoop(()=>{
-  const dt=Math.min(0.05, clock.getDelta());
-  if(mode==='walk' || renderer.xr.isPresenting){
-    let mx=0, my=0;
-    if(keys['KeyW']||keys['ArrowUp']) my+=1;
-    if(keys['KeyS']||keys['ArrowDown']) my-=1;
-    if(keys['KeyA']||keys['ArrowLeft']) mx-=1;
-    if(keys['KeyD']||keys['ArrowRight']) mx+=1;
-    mx+=jx; my+=-jy;
-    const sp=(keys['ShiftLeft']||keys['ShiftRight']?3.4:1.7)*dt;
-    // yaw 0 looks blender +Y, which is three -Z
-    const ca=Math.cos(yaw), sa=Math.sin(yaw);
-    // movement in blender XY: forward is +Y when yaw=0
-    // three camera looks -Z; after rig.rotation.y=yaw, forward in three is (sin(yaw), 0, -cos(yaw))
-    // T2B: x=three.x, y=-three.z  => forward blender = (sin(yaw), cos(yaw))
-    const dx=(sa*my + ca*mx)*sp;
-    const dy=(ca*my - sa*mx)*sp;
-    const nx=pos.x+dx, ny=pos.y+dy;
-    if(!blocked(nx,pos.y)) pos.x=nx;
-    if(!blocked(pos.x,ny)) pos.y=ny;
-    // XR thumbstick
-    const sess=renderer.xr.getSession&&renderer.xr.getSession();
-    if(sess){
-      for(const src of sess.inputSources||[]){
-        if(!src.gamepad) continue;
-        const ax=src.gamepad.axes||[];
-        // typically axes 2,3 are thumbstick
-        const tx=ax[2]||ax[0]||0, ty=ax[3]||ax[1]||0;
-        if(Math.hypot(tx,ty)>0.15){
-          const spx=1.7*dt;
-          const ddx=(sa*(-ty)+ca*tx)*spx, ddy=(ca*(-ty)-sa*tx)*spx;
-          if(!blocked(pos.x+ddx,pos.y)) pos.x+=ddx;
-          if(!blocked(pos.x,pos.y+ddy)) pos.y+=ddy;
-        }
-        // botón B/Y (5) o A/X (4) del mando: alternar paredes
-        const bt=src.gamepad.buttons||[];
-        const down=!!((bt[5]&&bt[5].pressed)||(bt[4]&&bt[4].pressed));
-        if(down && !vrBtnPrev) setWallsHidden(!wallsHidden);
-        vrBtnPrev=down;
-      }
-    }
-    applyRig();
-  } else orbit.update();
+  const dt=Math.min(clock.getDelta(),0.1);
+  if(renderer.xr.isPresenting) xrUpdate(dt);
+  else if(mode==='walk'){ const sp=(keys.ShiftLeft||keys.ShiftRight?3.2:1.5)*dt; let f=0,s=0;
+    if(keys.KeyW||keys.ArrowUp) f+=1; if(keys.KeyS||keys.ArrowDown) f-=1; if(keys.KeyD) s+=1; if(keys.KeyA) s-=1; if(keys.ArrowLeft) yaw+=1.8*dt; if(keys.ArrowRight) yaw-=1.8*dt;
+    f-=jv.y; s+=jv.x;
+    walkStep(f,s,sp);
+    applyRig(); }
+  else orbit.update();
+  renderer.toneMappingExposure=expo;
+  if(flashT>0){ flashT-=dt; flashM.material.opacity=Math.max(0,flashT/0.35*0.85); if(flashT<=0) flashM.visible=false; }
   renderer.render(scene,(mode==='aerial'&&!renderer.xr.isPresenting)?aerial:camera);
-  if(!renderer.xr.isPresenting){ drawMM(); if(!$('plan').hidden) pdraw(); }
-  fpsN++; fpsT+=dt; if(fpsT>1){ Object.assign(window.__gv, {fps:fpsN/fpsT,mode,pos:{...pos},yaw}); fpsN=0; fpsT=0; }
+  if(photoPending) doPhoto();
+  if(!renderer.xr.isPresenting){ drawMM(); }
+  fpsN++; fpsT+=dt; if(fpsT>1){ window.__gv.fps=fpsN/fpsT; fpsN=0; fpsT=0; }
 });
 
+window.__gv={ready:false};
 if(P.get('mode')==='walk'||P.get('room')){
   const r=(CFG.rooms||[]).find(r=>r.id===P.get('room')||r.name===P.get('room'))||(CFG.rooms||[])[0];
   if(r) goRoom(r); else setMode('walk');
 } else setMode('aerial');
 $('load').remove();
-window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}, hideAerial, hideWalls, hideHoods, hideFootprints, hideAlways, kitchen, CFG};
+{ const vb=VRButton.createButton(renderer,{optionalFeatures:['hand-tracking']}); $('vrtop').appendChild(vb);
+  const fix=()=>{ if(vb.textContent==='ENTER VR') vb.textContent='Entrar en VR'; else if(vb.textContent==='EXIT VR') vb.textContent='Salir de VR'; else if(/NOT SUPPORTED|NOT ALLOWED|WEBXR NEEDS/i.test(vb.textContent)) vb.parentNode.style.display='none'; };
+  new MutationObserver(fix).observe(vb,{childList:true,characterData:true,subtree:true}); fix(); }
+Object.assign(window.__gv,{ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}, setHoodsHidden, get hoodsHidden(){return hoodsHidden;}, hideAerial, hideWalls, hideHoods, hideFootprints, hideAlways, kitchen, CFG, conduits,
+  xr:()=>({watch:watchAnchor, watchPos:watch.visible?new THREE.Vector3().setFromMatrixPosition(watch.matrixWorld).toArray():null, rig:rig.position.toArray(),rigYaw:rig.rotation.y,cam:camera.getWorldPosition(new THREE.Vector3()).toArray(),c:[0,1].map(i=>renderer.xr.getController(i).getWorldPosition(new THREE.Vector3()).toArray()),g:[0,1].map(i=>renderer.xr.getControllerGrip(i).getWorldPosition(new THREE.Vector3()).toArray()),par:[0,1].map(i=>renderer.xr.getController(i).parent===rig&&renderer.xr.getControllerGrip(i).parent===rig&&renderer.xr.getHand(i).parent===rig),camPar:camera.parent===rig,presenting:renderer.xr.isPresenting}),
+  takePhoto, dbAll, openGal, pressDown, pressUp, pressDbg:()=>JSON.parse(JSON.stringify(__press,(k,v)=>k==="fn"||k==="t"?undefined:v)), rayDbg:()=>[0,1].map(i=>{ const c=renderer.xr.getController(i); c.updateMatrixWorld(true); const hb=vrHit(c); const inv=rig.matrixWorld.clone().invert(); const o=new THREE.Vector3().setFromMatrixPosition(c.matrixWorld).applyMatrix4(inv); const d=new THREE.Vector3(0,0,-1).transformDirection(c.matrixWorld).transformDirection(inv); return {hit:hb?(hb===vrHoodMesh?'hood':hb===vrWallMesh?'walls':hb===vrPhotoMesh?'photo':'mode'):null,o:o.toArray().map(v=>+v.toFixed(3)),d:d.toArray().map(v=>+v.toFixed(3)),hand:c.userData.hand||null,sel:!!c.userData.sel}; }), watchTarget:(w)=>{ const m={photo:vrPhotoMesh,walls:vrWallMesh,hood:vrHoodMesh}[w]; if(!m) return null; m.updateMatrixWorld(true); rig.updateMatrixWorld(true); const inv=rig.matrixWorld.clone().invert(); const p=new THREE.Vector3().setFromMatrixPosition(m.matrixWorld).applyMatrix4(inv); const n=new THREE.Vector3(0,0,1).transformDirection(m.matrixWorld).transformDirection(inv); return {p:p.toArray(),n:n.toArray(),visible:watch.visible}; }, acts:()=>({...__acts}), exitXR:()=>{ const ss=renderer.xr.getSession(); if(ss) return ss.end(); },
+  state:()=>({mode,x:pos.x,y:pos.y,yaw,pitch,blocked:blocked(pos.x,pos.y)}),
+  place:(x,y,yw,pt)=>{ pos.x=x; pos.y=y; yaw=yw; pitch=pt??-0.05; applyRig(); setMode('walk'); },
+  view:(px,py,pz,tx,ty,tz,fov)=>{ setMode('aerial'); aerial.position.copy(B2T(px,py,pz)); orbit.target.copy(B2T(tx,ty,tz)); if(fov){aerial.fov=fov; aerial.updateProjectionMatrix();} orbit.update(); },
+  walk:(f,s,m)=>{ const n=Math.ceil(m/0.05); for(let i=0;i<n;i++) walkStep(f,s,m/n); applyRig(); return {x:pos.x,y:pos.y}; },
+  setYaw:(y)=>{ yaw=y; applyRig(); },
+  camDir:()=>{ const d=new THREE.Vector3(); camera.getWorldDirection(d); return T2B(d); },
+  setMode2:k=>setLightMode(k), curMode:()=>curMode});
 </script>
 </body></html>
