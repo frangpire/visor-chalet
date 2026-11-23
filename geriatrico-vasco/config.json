@@ -2512,8 +2512,9 @@
       "emis": 1.0,
       "sky": "noche",
       "bg": "#1a1c20",
-      "env": 0.22,
-      "expo": 0.88
+      "env": 0.5,
+      "expo": 0.95,
+      "refl": "dia"
     }
   }
 }

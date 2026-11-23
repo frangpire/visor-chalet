@@ -203,7 +203,7 @@ async function setLightMode(k){
   document.querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===k));
   try{
     const baseName=M.base||k;
-    const [base,S]=await Promise.all([V.lm?loadSet(baseName):null, getSky(M.sky||k)]);
+    const [base,S]=await Promise.all([V.lm?loadSet(baseName):null, getSky(M.refl||M.sky||k)]);
     if(base){
       for(const [z,U] of Object.entries(ZU)){
         const kb=Math.PI*(CFG.K&&CFG.K[baseName]&&CFG.K[baseName][z]||1);
