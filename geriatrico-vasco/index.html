@@ -40,6 +40,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
 <div id="ui">
  <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
  <div id="modes"><button class="b m" data-m="dia">☀️ Día</button><button class="b m" data-m="noche">🌙 Noche</button></div>
+ <div id="wallsbox"><button class="b" id="bwalls" aria-pressed="false">Ocultar paredes</button></div>
  <section id="panel" hidden>
   <h1>Cocina · Geriátrico El Vasco</h1>
   <p>IGR010 B–25 · IGR Hostelería · Plano de distribución 08/10/26</p>
@@ -48,7 +49,7 @@ body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
   <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo: teletransporte al suelo · stick izquierdo: andar · stick derecho: girar.</p>
   <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
   <h2>Controles</h2>
-  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
+  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.<br><b>Paredes:</b> el botón «Ocultar paredes» deja suelo, umbrales de puerta y equipos. En VR, el panel del mando izquierdo o el botón B/Y.</p>
   <h2>Sobre el modelo</h2>
   <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas, ventanas y tomas en su posición). Iluminación horneada en Cycles (lightmaps Día/Noche, solo suelo, muros y techo) con IBL para el inox. El atrezo (ollas, tablas) no es un equipo del plano. Altura libre de 3,00 m, alicatado, zócalo sanitario, techo registrable y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. Las ventanas siguen los huecos de carpintería del plano; su antepecho y dintel (0,90 / 2,40 m) son supuestos. No se ha inventado ningún equipo que no figure en el plano.</p>
  </section>
@@ -146,7 +147,7 @@ function zoneOf(o){
   }
   return null;
 }
-const hideAerial=[], emisMats=[], zoneMats=[], matCache=new Map();
+const hideAerial=[], hideWalls=[], emisMats=[], zoneMats=[], matCache=new Map();
 kitchen.traverse(o=>{
   if(!o.isMesh) return;
   o.castShadow=false; o.receiveShadow=false;
@@ -157,8 +158,18 @@ kitchen.traverse(o=>{
   o.material=mats.map(m=>{
     if(!m) return m;
     const n=((m.name||o.name||'')+'').toLowerCase();
-    if(n.includes('ceil')||n.includes('techo')||n.includes('led')||nm.startsWith('led_')||nm==='ceiling'){
+    const isCeil=n.includes('ceil')||n.includes('techo')||n.includes('led')||nm.startsWith('led_')||nm==='ceiling';
+    const isCampana=nm.includes('campana')||nm.includes('ls9p_hood')||nm.includes('det_ls9p_arm')||nm.includes('det_campana');
+    if(isCeil && !isCampana){
       if(!hideAerial.includes(o)) hideAerial.push(o);
+    }
+    // muros / tabiques / pilares / dinteles / antepechos / techo / zócalo / hojas de puerta / vidrio de ventana
+    // las campanas se quedan visibles
+    const isWallMat=n==='tile_w'||n==='paint'||n==='coving'||n==='ceil'||n.includes('zocalo')||n.includes('zócalo');
+    const isWallName=/^(walls?|muros?|tabique|pilar|doorfr|winfr|winl|ceiling|coving|zocalo|door_|glass_|sign_)/.test(nm)
+      || nm.startsWith('led_') || nm.startsWith('door_hv');
+    if((isWallMat||isWallName||(isCeil&&!isCampana)) && !isCampana && !nm.startsWith('door_mark')){
+      if(!hideWalls.includes(o)) hideWalls.push(o);
     }
     let mm=m;
     if(z && V.lm){
@@ -178,18 +189,27 @@ kitchen.traverse(o=>{
       mm.emissiveIntensity=mm.userData.emis0=0.45;
       mm.toneMapped=true;
       emisMats.push(mm);
-    } else if(/inox|chrome|cromo|metal/.test(n)){
+    } else if(/inox|chrome|cromo|metal|hierro|lat[oó]n|cast|brass|umbral/.test(n)){
       if(mm.metalness!==undefined){
-        mm.metalness=n.includes('hierro')?0.75:0.92;
-        if(n.includes('campana')) mm.roughness=0.22;
-        else mm.roughness=0.28;
-        mm.envMapIntensity=0.85;
-        if(mm.color) mm.color.setRGB(0.78,0.80,0.82);
-        mm.map=null; mm.normalMap=null; mm.roughnessMap=null; mm.bumpMap=null;
-        // brillo de estudio, sin vetas de albedo ni de roughness
+        const iron=/hierro|cast|fundid/.test(n);
+        const brass=/lat[oó]n|brass|quemador/.test(n);
+        const chrome=/chrome|cromo/.test(n);
+        const body=/inox_b/.test(n);
+        const pol=/inox_p|pulid/.test(n);
+        if(iron){ mm.metalness=0.75; mm.roughness=0.48; if(mm.color) mm.color.setRGB(0.07,0.07,0.08); mm.envMapIntensity=0.55; }
+        else if(brass){ mm.metalness=0.9; mm.roughness=0.25; if(mm.color) mm.color.setRGB(0.72,0.50,0.16); mm.envMapIntensity=1.05; }
+        else if(chrome){ mm.metalness=0.95; mm.roughness=0.12; if(mm.color) mm.color.setRGB(0.86,0.87,0.89); mm.envMapIntensity=1.2; }
+        else if(pol){ mm.metalness=0.94; mm.roughness=0.16; if(mm.color) mm.color.setRGB(0.84,0.85,0.87); mm.envMapIntensity=1.15; }
+        else if(body){ mm.metalness=0.9; mm.roughness=0.32; if(mm.color) mm.color.setRGB(0.74,0.76,0.78); mm.envMapIntensity=0.95; }
+        else if(n.includes('campana')){ mm.metalness=0.92; mm.roughness=0.20; if(mm.color) mm.color.setRGB(0.80,0.81,0.83); mm.envMapIntensity=1.1; }
+        else { mm.metalness=0.92; mm.roughness=0.22; if(mm.color) mm.color.setRGB(0.80,0.81,0.83); mm.envMapIntensity=1.05; }
+        // no mapas de rugosidad (vetas); el contraste viene de la forma y del IBL
+        mm.normalMap=null; mm.roughnessMap=null; mm.bumpMap=null;
+        if(mm.map && !iron && !brass) mm.map=null;
       }
-    } else if(n.includes('vidrio') || (o.name||'').startsWith('GLASS_')){
-      return new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:0.14,envMapIntensity:0.9,depthWrite:false,side:THREE.DoubleSide});
+    } else if(n.includes('vidrio') || (o.name||'').startsWith('GLASS_') || (o.name||'').startsWith('DET_SCC_') && n.includes('vidrio')){
+      const dark=n.includes('horno')||n.includes('scr')||(o.name||'').includes('GLASS')&&(o.name||'').includes('SCC');
+      return new THREE.MeshPhysicalMaterial({color:dark?0x14161a:0xffffff,metalness:0,roughness:0.04,transparent:true,opacity:dark?0.35:0.14,envMapIntensity:0.95,depthWrite:false,side:THREE.DoubleSide});
     }
     return mm;
   });
@@ -197,6 +217,71 @@ kitchen.traverse(o=>{
   o.userData.zone=z;
 });
 // Sin PointLights: la luz de arquitectura viene del lightmap. El IBL ilumina el inox.
+
+// Sombras de contacto bajo equipos (decals suaves sobre el suelo)
+(function addContactShadows(){
+  const list=CFG.aabbEquip||[];
+  if(!list.length) return;
+  const cv=document.createElement('canvas'); cv.width=cv.height=64;
+  const g=cv.getContext('2d');
+  const grd=g.createRadialGradient(32,32,2,32,32,30);
+  grd.addColorStop(0,'rgba(0,0,0,0.55)');
+  grd.addColorStop(0.45,'rgba(0,0,0,0.28)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=grd; g.fillRect(0,0,64,64);
+  const tex=new THREE.CanvasTexture(cv);
+  tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
+  const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,opacity:0.85,side:THREE.DoubleSide});
+  const grp=new THREE.Group(); grp.name='CONTACT_SHADOWS';
+  for(const r of list){
+    const w=Math.max(0.12,(r[2]-r[0])+0.16), d=Math.max(0.12,(r[3]-r[1])+0.16);
+    const pl=new THREE.Mesh(new THREE.PlaneGeometry(w,d), mat);
+    pl.rotation.x=-Math.PI/2;
+    pl.position.copy(B2T((r[0]+r[2])/2,(r[1]+r[3])/2,0.006));
+    pl.renderOrder=2;
+    grp.add(pl);
+  }
+  scene.add(grp);
+})();
+
+let wallsHidden=false;
+function collideRects(){
+  return wallsHidden ? (CFG.aabbEquip||[]) : (CFG.aabbs||[]);
+}
+function frameAerial(){
+  const W=CFG.mmWorld;
+  if(W&&wallsHidden){
+    const cx=(W.x0+W.x1)/2, cy=(W.y0+W.y1)/2;
+    const span=Math.max(W.x1-W.x0, W.y1-W.y0);
+    aerial.position.copy(B2T(cx, cy-span*0.08, Math.max(14, span*1.05)));
+    orbit.target.copy(B2T(cx, cy, 0.05));
+    orbit.maxPolarAngle=Math.PI*0.499;
+    orbit.update();
+  } else {
+    orbit.maxPolarAngle=Math.PI*0.49;
+    resetAerial();
+  }
+}
+function setWallsHidden(h){
+  wallsHidden=!!h;
+  for(const o of hideWalls) o.visible=!wallsHidden;
+  // techo: en aérea siempre oculto; a pie sigue la palanca
+  if(mode==='aerial' && !renderer.xr.isPresenting){
+    for(const o of hideAerial) o.visible=false;
+  } else if(!wallsHidden){
+    for(const o of hideAerial) o.visible=true;
+  }
+  const b=$('bwalls');
+  if(b){
+    b.textContent=wallsHidden?'Mostrar paredes':'Ocultar paredes';
+    b.classList.toggle('on', wallsHidden);
+    b.setAttribute('aria-pressed', wallsHidden?'true':'false');
+  }
+  if(vrWallLabel) vrWallLabel.textContent=wallsHidden?'Mostrar paredes':'Ocultar paredes';
+  if(mode==='aerial' && !renderer.xr.isPresenting) frameAerial();
+}
+$('bwalls').onclick=()=>setWallsHidden(!wallsHidden);
+
 let expo=1, curMode=null, modeBusy=false;
 async function setLightMode(k){
   if(modeBusy||!CFG.modes||!CFG.modes[k]) return; modeBusy=true;
@@ -226,9 +311,9 @@ await setLightMode(MODE0);
 
 
 // collisions: AABBs in Blender XY (meters)
-const RECTS=CFG.aabbs||[];
 const RAD=0.22;
 function blocked(x,y){
+  const RECTS=collideRects();
   for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; }
   return false;
 }
@@ -247,7 +332,7 @@ function applyRig(){
 applyRig();
 
 function setCeilingVisible(v){
-  for(const o of hideAerial) o.visible=v;
+  for(const o of hideAerial) o.visible= wallsHidden ? false : v;
 }
 function setMode(m){
   mode=m;
@@ -420,10 +505,14 @@ for(let i=0;i<2;i++){
   c.addEventListener('selectstart',()=>{ c.userData.sel=true; });
   c.addEventListener('selectend',()=>{
     c.userData.sel=false;
-    // teleport: ray vs y=0
+    // primero el panel VR de paredes
     const o=new THREE.Vector3(), d=new THREE.Vector3();
     c.getWorldPosition(o); c.getWorldDirection(d);
     const ray=new THREE.Ray(o,d);
+    if(vrWallMesh){
+      const hit=ray.intersectObject(vrWallMesh,false);
+      if(hit&&hit.length){ setWallsHidden(!wallsHidden); return; }
+    }
     const p=new THREE.Vector3();
     if(ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0), p)){
       const b=T2B(p);
@@ -431,8 +520,32 @@ for(let i=0;i<2;i++){
     }
   });
 }
-renderer.xr.addEventListener('sessionstart',()=>{ document.body.classList.add('xr'); setMode('walk'); });
+// Panel en el mando izquierdo (VR) + botón B/Y del mando
+let vrWallMesh=null, vrWallLabel=null, vrBtnPrev=false;
+(function makeVrWallPanel(){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=128;
+  const g=cv.getContext('2d');
+  function paint(txt){
+    g.fillStyle='#1a2430'; g.fillRect(0,0,512,128);
+    g.strokeStyle='#d7dee6'; g.lineWidth=8; g.strokeRect(4,4,504,120);
+    g.fillStyle='#fff'; g.font='600 48px system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(txt,256,64);
+  }
+  paint('Ocultar paredes');
+  const tex=new THREE.CanvasTexture(cv);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(0.18,0.045), new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+  mesh.position.set(0,0.06,-0.14);
+  vrWallMesh=mesh; vrWallLabel={set textContent(v){ paint(v); tex.needsUpdate=true; }};
+  // se engancha al grip 0 al entrar en VR
+  window.__vrWallMesh=mesh;
+})();
+renderer.xr.addEventListener('sessionstart',()=>{
+  document.body.classList.add('xr'); setMode('walk');
+  const g=renderer.xr.getControllerGrip(0);
+  if(vrWallMesh && g && vrWallMesh.parent!==g) g.add(vrWallMesh);
+});
 renderer.xr.addEventListener('sessionend',()=>{ document.body.classList.remove('xr'); });
+
 
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
@@ -477,6 +590,11 @@ renderer.setAnimationLoop(()=>{
           if(!blocked(pos.x+ddx,pos.y)) pos.x+=ddx;
           if(!blocked(pos.x,pos.y+ddy)) pos.y+=ddy;
         }
+        // botón B/Y (5) o A/X (4) del mando: alternar paredes
+        const bt=src.gamepad.buttons||[];
+        const down=!!((bt[5]&&bt[5].pressed)||(bt[4]&&bt[4].pressed));
+        if(down && !vrBtnPrev) setWallsHidden(!wallsHidden);
+        vrBtnPrev=down;
       }
     }
     applyRig();
@@ -491,6 +609,6 @@ if(P.get('mode')==='walk'||P.get('room')){
   if(r) goRoom(r); else setMode('walk');
 } else setMode('aerial');
 $('load').remove();
-window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B};
+window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B, setWallsHidden, get wallsHidden(){return wallsHidden;}};
 </script>
 </body></html>
