@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="icon" href="data:,">
+<title>Cocina Geriátrico El Vasco · Visita 3D y VR</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#c5ccd2;font-family:system-ui,Segoe UI,Arial,sans-serif}
+#c{position:fixed;inset:0;touch-action:none;display:block}
+#load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e8eaee;z-index:50;font-size:18px;color:#333;gap:12px}
+#bar{width:260px;height:8px;background:#ddd;border-radius:4px;overflow:hidden}#bar i{display:block;height:100%;width:0;background:#3a5a7a}
+#ui{position:fixed;left:10px;top:10px;z-index:8;display:flex;flex-direction:column;gap:8px;max-width:min(330px,calc(100vw - 20px));max-height:calc(100dvh - 20px)}
+.b{background:#fffef9;border:1px solid #bbb;border-radius:9px;padding:9px 12px;font-size:14px;cursor:pointer;min-height:40px;color:#222}
+.b:hover{background:#e8eef3}.b.on{background:#3a5a7a;color:#fff;border-color:#2a4460}
+#top{display:flex;gap:6px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000b;color:#fff;padding:8px 14px;border-radius:8px;z-index:30;font-size:14px;display:none}
+#panel{background:#fffef9;border:1px solid #ddd;border-radius:12px;padding:10px;overflow:auto;box-shadow:0 5px 24px #0003;font-size:13px;color:#222}
+#panel[hidden]{display:none}#panel h1{font-size:15px;margin:2px 4px 8px}
+#panel h2{font-size:13px;margin:10px 4px 6px;color:#2a4460}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#panel p{margin:6px 4px;line-height:1.45}
+#mm{position:fixed;right:10px;top:10px;z-index:7;background:#fffd;border-radius:10px;padding:5px;width:clamp(150px,30vw,280px)}
+#mm canvas{display:block;width:100%;height:auto;cursor:crosshair;border-radius:6px}
+#mm div{font-size:12px;color:#333;padding:2px 4px;display:flex;justify-content:space-between}
+#hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#000a;color:#fff;font-size:12px;padding:6px 12px;border-radius:8px;z-index:6;text-align:center;max-width:80vw;pointer-events:none}
+#joy{position:fixed;left:24px;bottom:50px;width:120px;height:120px;border-radius:60px;background:#0003;border:2px solid #fff8;z-index:6;display:none;touch-action:none}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:25px;background:#fffc}
+#plan{position:fixed;inset:0;z-index:40;background:#e9ece4;display:flex;flex-direction:column}
+#plan[hidden]{display:none}
+#ptools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px;background:#fffef9;border-bottom:1px solid #ccc}
+#ptitle{margin-right:auto;font-weight:600}
+#pc{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:grab}
+#VRButton{position:static!important;transform:none!important;width:100%!important;left:auto!important;bottom:auto!important;margin:0!important;background:#2d5a3d!important;opacity:1!important;font-size:14px!important;padding:10px!important;border-radius:9px!important;border:0!important}
+body.xr #ui,body.xr #mm,body.xr #hint,body.xr #joy{display:none!important}
+@media(max-width:700px){.b{font-size:12px;padding:6px 8px;min-height:34px}#mm{width:34vw;top:auto;bottom:96px;right:8px}}
+</style>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}</script>
+</head><body>
+<div id="load"><div id="lt">Cargando la cocina…</div><div id="bar"><i></i></div></div>
+<canvas id="c"></canvas>
+<div id="ui">
+ <div id="top"><button class="b" id="bopt">☰ Opciones</button><button class="b" id="baer">Vista aérea</button><button class="b" id="bwalk">Pasear</button><button class="b" id="bplan">Plano</button></div>
+ <section id="panel" hidden>
+  <h1>Cocina · Geriátrico El Vasco</h1>
+  <p>IGR010 B–25 · IGR Hostelería · Plano de distribución 08/10/26</p>
+  <h2>Ir a una zona</h2><div class="grid" id="rooms"></div>
+  <h2>Realidad virtual</h2><div id="vrslot"></div>
+  <p id="vrnote">Abre esta página en el navegador del Meta Quest y pulsa ENTER VR. Gatillo: teletransporte al suelo · stick izquierdo: andar · stick derecho: girar.</p>
+  <h2>Calidad</h2><div class="grid"><button class="b" data-q="alta">Alta (PC)</button><button class="b" data-q="quest">Ligera (Quest/móvil)</button></div>
+  <h2>Controles</h2>
+  <p><b>Pasear (PC):</b> W A S D o flechas para andar, arrastra con el ratón para mirar, Mayús para ir más rápido. <b>Móvil:</b> joystick para andar, arrastra para mirar.<br><b>Vista aérea:</b> arrastra para girar, rueda o pellizco para acercar, botón derecho / dos dedos para desplazar. Doble clic en el suelo para entrar andando ahí.<br><b>Mini-plano:</b> toca un punto para ir allí.</p>
+  <h2>Sobre el modelo</h2>
+  <p>Modelo 3D ceñido al DWG de IGR (equipos, muros, puertas y tomas en su posición). Altura libre de 3,00 m, alicatado, zócalo sanitario y luminarias de techo son supuestos de cocina industrial, porque el plano no los cota. No se ha inventado ningún equipo que no figure en el plano.</p>
+ </section>
+</div>
+<div id="mm"><div><span id="mmroom">Cocina</span><span>planta</span></div><canvas id="mmc"></canvas></div>
+<div id="toast"></div>
+<div id="hint">Cargando…</div>
+<div id="joy"><div id="knob"></div></div>
+<section id="plan" hidden><div id="ptools"><span id="ptitle">Plano original IGR010 B–25</span>
+ <button class="b" id="pplus">＋</button><button class="b" id="pminus">－</button><button class="b" id="pfit">Encajar</button><button class="b" id="pclose">Cerrar ✕</button></div>
+ <canvas id="pc"></canvas></section>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {VRButton} from 'three/addons/webxr/VRButton.js';
+import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const $=id=>document.getElementById(id);
+const P=new URLSearchParams(location.search);
+const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
+const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
+const CFG=await (await fetch('config.json')).json();
+const V=CFG[Q]||CFG.alta;
+const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
+const toast=(t)=>{const e=$('toast'); e.textContent=t; e.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>e.style.display='none',2400);};
+// three.js: glTF Y-up. Blender (x,y,z_up) -> three (x, z_up, -y)
+const B2T=(x,y,z)=>new THREE.Vector3(x,z,-y);
+const T2B=(v)=>({x:v.x, y:-v.z, z:v.y});
+
+const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,Q==='alta'?1.6:1.2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.xr.enabled=true;
+renderer.xr.setReferenceSpaceType('local-floor');
+if(renderer.xr.setFoveation) renderer.xr.setFoveation(1);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xc5ccd2);
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const rig=new THREE.Group(); scene.add(rig);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,200);
+camera.position.set(0,1.62,0); rig.add(camera);
+const aerial=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,400);
+const orbit=new OrbitControls(aerial,renderer.domElement);
+orbit.enableDamping=true; orbit.maxPolarAngle=Math.PI*0.49; orbit.minDistance=3; orbit.maxDistance=40;
+function resetAerial(){
+  const s=CFG.spawn||{x:0,y:0};
+  aerial.position.copy(B2T(s.x-8,s.y-10,14));
+  orbit.target.copy(B2T(s.x,s.y,0.5));
+  orbit.update();
+}
+resetAerial();
+
+setLoad(0.15,'Cargando modelo…');
+const loader=new GLTFLoader();
+const gltf=await loader.loadAsync(V.glb, e=>{ if(e.total) setLoad(0.15+0.7*e.loaded/e.total); });
+setLoad(0.9,'Preparando…');
+const kitchen=gltf.scene; scene.add(kitchen);
+kitchen.traverse(o=>{
+  if(!o.isMesh) return;
+  o.castShadow=false; o.receiveShadow=false;
+  const m=o.material;
+  if(m && m.map) m.map.anisotropy=4;
+  if(m && m.emissive && m.emissiveIntensity>0){ /* keep */ }
+});
+scene.add(new THREE.HemisphereLight(0xe8eef5, 0x6a6a60, 0.35));
+scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+// collisions: AABBs in Blender XY (meters)
+const RECTS=CFG.aabbs||[];
+const RAD=0.22;
+function blocked(x,y){
+  for(const r of RECTS){ if(x>r[0]-RAD&&x<r[2]+RAD&&y>r[1]-RAD&&y<r[3]+RAD) return true; }
+  return false;
+}
+const CEIL=CFG.ceiling||3.0;
+const spawn=CFG.spawn||{x:0,y:0,z:1.62};
+let mode='aerial'; // aerial | walk
+let pos={x:spawn.x, y:spawn.y};
+let yaw=0, pitch=0;
+const keys={};
+const vel={x:0,y:0};
+function applyRig(){
+  rig.position.copy(B2T(pos.x,pos.y,0));
+  rig.rotation.set(0, yaw, 0);
+  camera.rotation.set(pitch, 0, 0);
+}
+applyRig();
+
+function setMode(m){
+  mode=m;
+  $('baer').classList.toggle('on', m==='aerial');
+  $('bwalk').classList.toggle('on', m==='walk');
+  $('joy').style.display=(m==='walk'&&isTouch)?'block':'none';
+  $('hint').textContent=m==='aerial'
+    ? 'Vista aérea · arrastra para girar · doble clic en el suelo para entrar andando'
+    : 'Pasear · W A S D / flechas · arrastra para mirar'+(isTouch?' · joystick para andar':'');
+  orbit.enabled=(m==='aerial');
+}
+function goXY(x,y,lookYaw){
+  if(!blocked(x,y)){ pos.x=x; pos.y=y; }
+  if(lookYaw!=null) yaw=lookYaw;
+  applyRig();
+  setMode('walk');
+}
+function goRoom(r){ if(!r) return; goXY(r.x, r.y, r.yaw||0); $('mmroom').textContent=r.name; }
+
+// rooms buttons
+const roomsEl=$('rooms');
+for(const r of (CFG.rooms||[])){
+  const b=document.createElement('button'); b.className='b'; b.textContent=r.name;
+  b.onclick=()=>goRoom(r); roomsEl.appendChild(b);
+}
+
+$('bopt').onclick=()=>$('panel').hidden=!$('panel').hidden;
+$('baer').onclick=()=>{ setMode('aerial'); resetAerial(); };
+$('bwalk').onclick=()=>{ setMode('walk'); applyRig(); };
+$('bplan').onclick=()=>{$('plan').hidden=false; pfit();};
+$('pclose').onclick=()=>$('plan').hidden=true;
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{
+  const u=new URL(location.href); u.searchParams.set('q', b.dataset.q); location.href=u.toString();
+});
+
+// mouse look (walk) / inverted touch already on orbit
+const TOUCH_DIR=1;
+const cv=$('c');
+orbit.rotateSpeed=1;
+cv.addEventListener('pointerdown',e=>{
+  if(mode==='aerial'){ orbit.rotateSpeed=(e.pointerType==='touch'&&TOUCH_DIR===1)?-1:1; }
+},{capture:true});
+
+let dragging=false, lx=0, ly=0;
+cv.addEventListener('pointerdown', e=>{
+  if(mode!=='walk' || renderer.xr.isPresenting) return;
+  if(e.pointerType==='touch' && e.clientX<140 && e.clientY>innerHeight-180) return; // joystick
+  dragging=true; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e=>{
+  if(!dragging || mode!=='walk') return;
+  const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+  const s=(e.pointerType==='touch'? TOUCH_DIR: 1);
+  yaw -= dx*0.005*s;
+  pitch -= dy*0.005*s;
+  pitch=Math.max(-1.2, Math.min(1.2, pitch));
+  applyRig();
+});
+cv.addEventListener('pointerup',()=>dragging=false);
+
+window.addEventListener('keydown',e=>{ keys[e.code]=true; });
+window.addEventListener('keyup',e=>{ keys[e.code]=false; });
+
+// joystick
+const joy=$('joy'), knob=$('knob');
+let jx=0, jy=0, jid=null;
+function jset(cx,cy){
+  const r=joy.getBoundingClientRect(), dx=cx-(r.left+r.width/2), dy=cy-(r.top+r.height/2);
+  const m=Math.hypot(dx,dy), max=40, k=m>max?max/m:1;
+  jx=(dx*k)/max; jy=(dy*k)/max;
+  knob.style.left=(35+dx*k)+'px'; knob.style.top=(35+dy*k)+'px';
+}
+joy.addEventListener('pointerdown',e=>{ jid=e.pointerId; joy.setPointerCapture(e.pointerId); jset(e.clientX,e.clientY); });
+joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) jset(e.clientX,e.clientY); });
+joy.addEventListener('pointerup',()=>{ jid=null; jx=0; jy=0; knob.style.left='35px'; knob.style.top='35px'; });
+
+// double click to walk
+const rc=new THREE.Raycaster();
+function pickGround(cx,cy){
+  const ndc=new THREE.Vector2((cx/innerWidth)*2-1, -(cy/innerHeight)*2+1);
+  const cam=(mode==='aerial'&&!renderer.xr.isPresenting)?aerial:camera;
+  rc.setFromCamera(ndc, cam);
+  const hits=rc.intersectObject(kitchen, true);
+  for(const h of hits){ if(h.point.y<0.4){ const b=T2B(h.point); return b; } }
+  // plane y=0
+  const pl=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+  const p=new THREE.Vector3(); if(rc.ray.intersectPlane(pl,p)) return T2B(p);
+  return null;
+}
+cv.addEventListener('dblclick',e=>{
+  const p=pickGround(e.clientX,e.clientY); if(!p) return;
+  if(!blocked(p.x,p.y)) goXY(p.x,p.y);
+});
+
+// minimap
+const mm=$('mmc'); const mmx=mm.getContext('2d');
+const mmImg=new Image(); let mmReady=false;
+mmImg.onload=()=>{ mm.width=mmImg.width; mm.height=mmImg.height; mmReady=true; };
+if(CFG.minimap) mmImg.src=CFG.minimap;
+function worldToMM(x,y){
+  const b=CFG.mmBounds||CFG.world; // in CAD? we'll store blender meters bounds
+  const r=CFG.mmWorld; // {x0,y0,x1,y1} blender
+  if(!r) return [mm.width/2, mm.height/2];
+  const u=(x-r.x0)/(r.x1-r.x0), v=(r.y1-y)/(r.y1-r.y0);
+  return [u*mm.width, v*mm.height];
+}
+function mmToWorld(mx,my){
+  const r=CFG.mmWorld; if(!r) return {x:0,y:0};
+  const u=mx/mm.width, v=my/mm.height;
+  return {x:r.x0+u*(r.x1-r.x0), y:r.y1-v*(r.y1-r.y0)};
+}
+function drawMM(){
+  if(!mmReady){ mm.width=280; mm.height=200; mmx.fillStyle='#eee'; mmx.fillRect(0,0,mm.width,mm.height); }
+  else { mmx.drawImage(mmImg,0,0,mm.width,mm.height); }
+  const [px,py]=worldToMM(pos.x,pos.y);
+  mmx.fillStyle='#c22'; mmx.beginPath(); mmx.arc(px,py,5,0,6.3); mmx.fill();
+  mmx.strokeStyle='#c22'; mmx.beginPath(); mmx.moveTo(px,py);
+  // yaw: blender yaw 0 looks +Y? We set rig.rotation.y = yaw, camera looks -Z in three after yaw.
+  // three -Z is blender +Y. So yaw 0 looks +Y blender. minimap up is +Y if v decreases with y.
+  const a=-yaw-Math.PI/2;
+  mmx.lineTo(px+12*Math.cos(a), py+12*Math.sin(a)); mmx.stroke();
+}
+mm.addEventListener('pointerdown',e=>{
+  const r=mm.getBoundingClientRect(), x=(e.clientX-r.left)*mm.width/r.width, y=(e.clientY-r.top)*mm.height/r.height;
+  const w=mmToWorld(x,y); if(!blocked(w.x,w.y)) goXY(w.x,w.y);
+});
+
+// plan overlay
+const pc=$('pc'), px=pc.getContext('2d');
+const planImg=new Image(); let planReady=false, pscale=1, pox=0, poy=0, pdrag=null;
+planImg.onload=()=>{ planReady=true; pfit(); };
+if(CFG.plan) planImg.src=CFG.plan;
+function pfit(){
+  if(!planReady) return;
+  const w=pc.clientWidth, h=pc.clientHeight; pc.width=w*devicePixelRatio; pc.height=h*devicePixelRatio;
+  pc.style.width=w+'px'; pc.style.height=h+'px';
+  pscale=Math.min(w/planImg.width, h/planImg.height)*0.98;
+  pox=(w-planImg.width*pscale)/2; poy=(h-planImg.height*pscale)/2; pdraw();
+}
+function pdraw(){
+  if(!planReady) return;
+  const w=pc.width, h=pc.height, dpr=devicePixelRatio||1;
+  px.setTransform(dpr,0,0,dpr,0,0);
+  px.fillStyle='#e9ece4'; px.fillRect(0,0,pc.clientWidth,pc.clientHeight);
+  px.save(); px.translate(pox,poy); px.scale(pscale,pscale);
+  px.drawImage(planImg,0,0);
+  px.restore();
+}
+$('pplus').onclick=()=>{pscale*=1.25; pdraw();};
+$('pminus').onclick=()=>{pscale/=1.25; pdraw();};
+$('pfit').onclick=pfit;
+pc.addEventListener('pointerdown',e=>{ pdrag={x:e.clientX-pox,y:e.clientY-poy}; pc.setPointerCapture(e.pointerId); });
+pc.addEventListener('pointermove',e=>{ if(!pdrag) return; pox=e.clientX-pdrag.x; poy=e.clientY-pdrag.y; pdraw(); });
+pc.addEventListener('pointerup',()=>pdrag=null);
+pc.addEventListener('wheel',e=>{ e.preventDefault(); const k=e.deltaY>0?0.9:1.1; pscale*=k; pdraw(); },{passive:false});
+
+// WebXR
+const vrBtn=VRButton.createButton(renderer);
+$('vrslot').appendChild(vrBtn);
+const fac=new XRControllerModelFactory();
+const ctrls=[];
+for(let i=0;i<2;i++){
+  const c=renderer.xr.getController(i);
+  const g=renderer.xr.getControllerGrip(i);
+  g.add(fac.createControllerModel(g));
+  scene.add(c); scene.add(g); ctrls.push(c);
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-2)]), new THREE.LineBasicMaterial({color:0x88ccff}));
+  c.add(line);
+  c.addEventListener('selectstart',()=>{ c.userData.sel=true; });
+  c.addEventListener('selectend',()=>{
+    c.userData.sel=false;
+    // teleport: ray vs y=0
+    const o=new THREE.Vector3(), d=new THREE.Vector3();
+    c.getWorldPosition(o); c.getWorldDirection(d);
+    const ray=new THREE.Ray(o,d);
+    const p=new THREE.Vector3();
+    if(ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0), p)){
+      const b=T2B(p);
+      if(!blocked(b.x,b.y)){ pos.x=b.x; pos.y=b.y; applyRig(); }
+    }
+  });
+}
+renderer.xr.addEventListener('sessionstart',()=>{ document.body.classList.add('xr'); setMode('walk'); });
+renderer.xr.addEventListener('sessionend',()=>{ document.body.classList.remove('xr'); });
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  aerial.aspect=innerWidth/innerHeight; aerial.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  if(!$('plan').hidden) pfit();
+});
+
+const clock=new THREE.Clock();
+let fpsN=0,fpsT=0;
+renderer.setAnimationLoop(()=>{
+  const dt=Math.min(0.05, clock.getDelta());
+  if(mode==='walk' || renderer.xr.isPresenting){
+    let mx=0, my=0;
+    if(keys['KeyW']||keys['ArrowUp']) my+=1;
+    if(keys['KeyS']||keys['ArrowDown']) my-=1;
+    if(keys['KeyA']||keys['ArrowLeft']) mx-=1;
+    if(keys['KeyD']||keys['ArrowRight']) mx+=1;
+    mx+=jx; my+=-jy;
+    const sp=(keys['ShiftLeft']||keys['ShiftRight']?3.4:1.7)*dt;
+    // yaw 0 looks blender +Y, which is three -Z
+    const ca=Math.cos(yaw), sa=Math.sin(yaw);
+    // movement in blender XY: forward is +Y when yaw=0
+    // three camera looks -Z; after rig.rotation.y=yaw, forward in three is (sin(yaw), 0, -cos(yaw))
+    // T2B: x=three.x, y=-three.z  => forward blender = (sin(yaw), cos(yaw))
+    const dx=(sa*my + ca*mx)*sp;
+    const dy=(ca*my - sa*mx)*sp;
+    const nx=pos.x+dx, ny=pos.y+dy;
+    if(!blocked(nx,pos.y)) pos.x=nx;
+    if(!blocked(pos.x,ny)) pos.y=ny;
+    // XR thumbstick
+    const sess=renderer.xr.getSession&&renderer.xr.getSession();
+    if(sess){
+      for(const src of sess.inputSources||[]){
+        if(!src.gamepad) continue;
+        const ax=src.gamepad.axes||[];
+        // typically axes 2,3 are thumbstick
+        const tx=ax[2]||ax[0]||0, ty=ax[3]||ax[1]||0;
+        if(Math.hypot(tx,ty)>0.15){
+          const spx=1.7*dt;
+          const ddx=(sa*(-ty)+ca*tx)*spx, ddy=(ca*(-ty)-sa*tx)*spx;
+          if(!blocked(pos.x+ddx,pos.y)) pos.x+=ddx;
+          if(!blocked(pos.x,pos.y+ddy)) pos.y+=ddy;
+        }
+      }
+    }
+    applyRig();
+  } else orbit.update();
+  renderer.render(scene,(mode==='aerial'&&!renderer.xr.isPresenting)?aerial:camera);
+  if(!renderer.xr.isPresenting){ drawMM(); if(!$('plan').hidden) pdraw(); }
+  fpsN++; fpsT+=dt; if(fpsT>1){ window.__gv={fps:fpsN/fpsT,mode,pos:{...pos},yaw}; fpsN=0; fpsT=0; }
+});
+
+if(P.get('mode')==='walk'||P.get('room')){
+  const r=(CFG.rooms||[]).find(r=>r.id===P.get('room')||r.name===P.get('room'))||(CFG.rooms||[])[0];
+  if(r) goRoom(r); else setMode('walk');
+} else setMode('aerial');
+$('load').remove();
+window.__gv={ready:true, TOUCH_DIR, goRoom, setMode, blocked, B2T, T2B};
+</script>
+</body></html>
