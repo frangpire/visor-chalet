@@ -147,7 +147,11 @@ function zoneOf(o){
   }
   return null;
 }
-const hideAerial=[], hideWalls=[], emisMats=[], zoneMats=[], matCache=new Map();
+const hideAerial=[], hideWalls=[], hideHoods=[], hideFootprints=[], hideAlways=[], emisMats=[], zoneMats=[], matCache=new Map();
+const KB=CFG.kitchenBounds||{x0:-7.42,y0:-5.73,x1:7.67,y1:5.62};
+const FB=CFG.floorBounds||{x0:-6.87,y0:-5.09,x1:7.09,y1:5.04};
+const inBox=(x,y,b)=>x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1;
+kitchen.updateMatrixWorld(true);
 kitchen.traverse(o=>{
   if(!o.isMesh) return;
   o.castShadow=false; o.receiveShadow=false;
@@ -216,6 +220,28 @@ kitchen.traverse(o=>{
   });
   if(Array.isArray(o.material)&&o.material.length===1) o.material=o.material[0];
   o.userData.zone=z;
+  const raw=(o.name||'');
+  const nml=raw.toLowerCase();
+  if(nml.startsWith('wall_footprint') || nml.includes('huella')){
+    if(!hideFootprints.includes(o)) hideFootprints.push(o);
+    o.visible=false;
+    return;
+  }
+  const isHood=nml.includes('campana')||nml.includes('ls9p_hood')||nml.includes('det_ls9p_arm')||nml.includes('det_campana');
+  if(isHood && !hideHoods.includes(o)) hideHoods.push(o);
+  const box=new THREE.Box3().setFromObject(o);
+  const c=box.getCenter(new THREE.Vector3());
+  const pb=T2B(c);
+  if(!inBox(pb.x,pb.y,KB)){
+    hideAlways.push(o); o.visible=false; return;
+  }
+  const outsideFloor=!inBox(pb.x,pb.y,FB);
+  const isDrainFloor=nml.startsWith('u_') && nml.includes('desag') && pb.z<0.15;
+  const isWallHung=nml.startsWith('sign_')||nml.startsWith('extintor')||nml.includes('interrupt')
+    || (nml.startsWith('u_') && !isDrainFloor);
+  const isCeilToma=nml.startsWith('u_') && pb.z>2.5;
+  if((isCeilToma||outsideFloor) && !hideAerial.includes(o)) hideAerial.push(o);
+  if((isWallHung||(outsideFloor&&nml.startsWith('u_'))) && !hideWalls.includes(o)) hideWalls.push(o);
 });
 // Sin PointLights: la luz de arquitectura viene del lightmap. El IBL ilumina el inox.
 
@@ -264,15 +290,17 @@ function frameAerial(){
     resetAerial();
   }
 }
+function applyVisibility(){
+  const aerialNow=mode==='aerial' && !renderer.xr.isPresenting;
+  for(const o of hideWalls) o.visible=!wallsHidden;
+  for(const o of hideFootprints) o.visible=!!wallsHidden;
+  for(const o of hideHoods) o.visible=!(wallsHidden && aerialNow);
+  for(const o of hideAerial) o.visible= aerialNow ? false : !wallsHidden;
+  for(const o of hideAlways) o.visible=false;
+}
 function setWallsHidden(h){
   wallsHidden=!!h;
-  for(const o of hideWalls) o.visible=!wallsHidden;
-  // techo: en aérea siempre oculto; a pie sigue la palanca
-  if(mode==='aerial' && !renderer.xr.isPresenting){
-    for(const o of hideAerial) o.visible=false;
-  } else if(!wallsHidden){
-    for(const o of hideAerial) o.visible=true;
-  }
+  applyVisibility();
   const b=$('bwalls');
   if(b){
     b.textContent=wallsHidden?'Mostrar paredes':'Ocultar paredes';
@@ -334,7 +362,7 @@ function applyRig(){
 applyRig();
 
 function setCeilingVisible(v){
-  for(const o of hideAerial) o.visible= wallsHidden ? false : v;
+  applyVisibility();
 }
 function setMode(m){
   mode=m;

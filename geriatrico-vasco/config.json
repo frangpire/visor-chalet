@@ -23,7 +23,7 @@
     },
     {
       "id": "camaras",
-      "name": "C\u00e1maras",
+      "name": "Cámaras",
       "x": 2.8,
       "y": 0.575,
       "yaw": -0.4
@@ -2278,14 +2278,14 @@
     "y1": -5000.0
   },
   "assumptions": [
-    "Antepecho 0.90 m y dintel 2.40 m de las ventanas: supuesto (el plano es 2D). Huecos tomados de pares de l\u00edneas en 06.carpinterias.",
-    "Espesor de muro ~140 mm, medido entre dobles l\u00edneas de 01.seccion.",
+    "Antepecho 0.90 m y dintel 2.40 m de las ventanas: supuesto (el plano es 2D). Huecos tomados de pares de líneas en 06.carpinterias.",
+    "Espesor de muro ~140 mm, medido entre dobles líneas de 01.seccion.",
     "Altura libre 3.00 m: supuesto, no cotada en el plano.",
-    "Luminarias LED de techo 1,20\u00d70,30 m: supuesto (pr\u00e1ctica habitual; el plano de distribuci\u00f3n no las acota).",
-    "Extintor y se\u00f1alizaci\u00f3n de salida: supuesto, junto a una puerta de paso, pr\u00e1ctica habitual.",
-    "Z\u00f3calo sanitario de 10 cm: supuesto, pr\u00e1ctica habitual de cocina industrial.",
-    "Techo registrable 600\u00d7600 mm: supuesto.",
-    "Tomas y desag\u00fces en la XY del DWG; la altura se toma de la cota del plano cuando existe (h \u2026 m del suelo / techo / a suelo) y, si no, de la pr\u00e1ctica habitual (anotado en fitting)."
+    "Luminarias LED de techo 1,20×0,30 m: supuesto (práctica habitual; el plano de distribución no las acota).",
+    "Extintor y señalización de salida: supuesto, junto a una puerta de paso, práctica habitual.",
+    "Zócalo sanitario de 10 cm: supuesto, práctica habitual de cocina industrial.",
+    "Techo registrable 600×600 mm: supuesto.",
+    "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting)."
   ],
   "mmWorld": {
     "x0": -7.183410167694092,
@@ -2450,7 +2450,7 @@
     }
   ],
   "alta": {
-    "glb": "cocina_alta_bd97395be187.glb",
+    "glb": "cocina_alta_7ea137432fcf.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_3841a066e2e0.jpg"
@@ -2461,7 +2461,7 @@
     }
   },
   "quest": {
-    "glb": "cocina_quest_bd97395be187.glb",
+    "glb": "cocina_quest_7ea137432fcf.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_9d1f4b7f767b.jpg"
@@ -2488,7 +2488,7 @@
   },
   "modes": {
     "dia": {
-      "label": "D\u00eda",
+      "label": "Día",
       "base": "dia",
       "tint": [
         1,
@@ -7038,5 +7038,17 @@
       2.573,
       1.854
     ]
-  ]
+  ],
+  "floorBounds": {
+    "x0": -6.8675,
+    "y0": -5.0925,
+    "x1": 7.0925,
+    "y1": 5.0425
+  },
+  "kitchenBounds": {
+    "x0": -7.4234,
+    "y0": -5.7282,
+    "x1": 7.6725,
+    "y1": 5.6176
+  }
 }
