@@ -70,8 +70,8 @@ import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFact
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 const $=id=>document.getElementById(id);
 const P=new URLSearchParams(location.search);
-const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window);
-const Q=P.get('q')||((isQuest||isTouch)?'quest':'alta');
+const isQuest=/OculusBrowser|Quest|Pico/i.test(navigator.userAgent), isTouch=('ontouchstart' in window), isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+const Q=P.get('q')||(isQuest?'quest':'alta');
 const CFG=await (await fetch('config.json')).json();
 const V=CFG[Q]||CFG.alta;
 const bar=$('bar').firstElementChild; const setLoad=(f,t)=>{bar.style.width=(f*100).toFixed(0)+'%'; if(t)$('lt').textContent=t;};
@@ -95,14 +95,21 @@ scene.background=new THREE.Color(0xcfd3d6);
 const pmrem=new THREE.PMREMGenerator(renderer);
 const texL=new THREE.TextureLoader();
 const SKY={};
+const studioEnv=()=>pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+try{ scene.environment=studioEnv(); scene.environmentIntensity=0.7; }catch(e){}
 async function getSky(k){
   if(SKY[k]) return SKY[k];
   const src=(CFG.skies&&CFG.skies[k])||CFG.hdri||CFG.sky;
-  if(!src){ const env=pmrem.fromScene(new RoomEnvironment(),0.04).texture; return SKY[k]={tex:null,env}; }
-  const t=await texL.loadAsync(src);
-  t.mapping=THREE.EquirectangularReflectionMapping;
-  t.colorSpace=THREE.SRGBColorSpace;
-  return SKY[k]={tex:t, env:pmrem.fromEquirectangular(t).texture};
+  const fallback=()=>({tex:null, env:studioEnv()});
+  if(!src){ return SKY[k]=fallback(); }
+  try{
+    const t=await texL.loadAsync(src);
+    t.mapping=THREE.EquirectangularReflectionMapping;
+    t.colorSpace=THREE.SRGBColorSpace;
+    const env=pmrem.fromEquirectangular(t).texture;
+    if(!env) return SKY[k]=fallback();
+    return SKY[k]={tex:t, env};
+  }catch(e){ console.warn('IBL fallback', e); return SKY[k]=fallback(); }
 }
 const SPECK=1/(Math.PI*1.4);
 const LMCHUNK=THREE.ShaderChunk.lights_fragment_maps
@@ -124,12 +131,20 @@ camera.position.set(0,1.62,0); rig.add(camera);
 const aerial=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,400);
 const orbit=new OrbitControls(aerial,renderer.domElement);
 orbit.enableDamping=true; orbit.maxPolarAngle=Math.PI*0.49; orbit.minDistance=3; orbit.maxDistance=40;
-function resetAerial(){
-  const s=CFG.spawn||{x:0,y:0};
-  aerial.position.copy(B2T(s.x-2,s.y-6,16));
-  orbit.target.copy(B2T(s.x+1,s.y,0.2));
+function frameAerial(){
+  const W=CFG.mmWorld||CFG.floorBounds||{x0:-7,y0:-5.5,x1:7.5,y1:5.4};
+  const cx=(W.x0+W.x1)/2, cy=(W.y0+W.y1)/2;
+  const span=Math.max(W.x1-W.x0, W.y1-W.y0);
+  const h=Math.max(16, span*1.2);
+  const off=span*0.02; // almost zenith; a tiny south offset keeps OrbitControls stable
+  aerial.up.set(0,1,0);
+  aerial.position.copy(B2T(cx, cy-off, h));
+  orbit.target.copy(B2T(cx, cy, 0.05));
+  orbit.minPolarAngle=0.02;
+  orbit.maxPolarAngle=Math.PI*0.49;
   orbit.update();
 }
+function resetAerial(){ frameAerial(); }
 resetAerial();
 
 setLoad(0.22,'Cargando modelo…');
@@ -177,7 +192,8 @@ kitchen.traverse(o=>{
       if(!hideWalls.includes(o)) hideWalls.push(o);
     }
     let mm=m;
-    if(z && V.lm){
+    const isArchLM=!!(isFloor || isWallMat || isWallName || (isCeil&&!isCampana));
+    if(z && V.lm && isArchLM){
       const key=m.uuid+'|'+z; mm=matCache.get(key);
       if(!mm){
         mm=m.clone(); mm.aoMap=null;
@@ -280,25 +296,11 @@ let wallsHidden=false;
 function collideRects(){
   return wallsHidden ? (CFG.aabbEquip||[]) : (CFG.aabbs||[]);
 }
-function frameAerial(){
-  const W=CFG.mmWorld;
-  if(W&&wallsHidden){
-    const cx=(W.x0+W.x1)/2, cy=(W.y0+W.y1)/2;
-    const span=Math.max(W.x1-W.x0, W.y1-W.y0);
-    aerial.position.copy(B2T(cx, cy-span*0.08, Math.max(14, span*1.05)));
-    orbit.target.copy(B2T(cx, cy, 0.05));
-    orbit.maxPolarAngle=Math.PI*0.499;
-    orbit.update();
-  } else {
-    orbit.maxPolarAngle=Math.PI*0.49;
-    resetAerial();
-  }
-}
 function applyVisibility(){
   const aerialNow=mode==='aerial' && !renderer.xr.isPresenting;
   for(const o of hideWalls) o.visible=!wallsHidden;
   for(const o of hideFootprints) o.visible=!!wallsHidden;
-  for(const o of hideHoods) o.visible=!(wallsHidden && aerialNow);
+  for(const o of hideHoods) o.visible=!wallsHidden;
   for(const o of hideAerial) o.visible= aerialNow ? false : !wallsHidden;
   for(const o of hideAlways) o.visible=false;
 }
