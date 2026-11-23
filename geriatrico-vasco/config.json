@@ -27,6 +27,27 @@
       "x": 2.8,
       "y": 0.575,
       "yaw": -0.4
+    },
+    {
+      "id": "sucio",
+      "name": "Sucio",
+      "x": -2.05,
+      "y": -1.55,
+      "yaw": 3.14
+    },
+    {
+      "id": "limpio",
+      "name": "Limpio",
+      "x": -0.9,
+      "y": -1.55,
+      "yaw": 3.14
+    },
+    {
+      "id": "vestibulo",
+      "name": "Vestíbulo de independencia",
+      "x": 1.85,
+      "y": 2.8,
+      "yaw": 1.57
     }
   ],
   "aabbs": [
@@ -2267,6 +2288,12 @@
       -1.6382,
       7.2266,
       -1.5182
+    ],
+    [
+      -1.48,
+      -3.1,
+      -0.68,
+      -2.22
     ]
   ],
   "world": {
@@ -2285,7 +2312,8 @@
     "Extintor y señalización de salida: supuesto, junto a una puerta de paso, práctica habitual.",
     "Zócalo sanitario de 10 cm: supuesto, práctica habitual de cocina industrial.",
     "Techo registrable 600×600 mm: supuesto.",
-    "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting)."
+    "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting).",
+    "Abatidor (leyenda n.º 12): sin huella ni bloque en el plano. Se coloca como supuesto entre los hornos de 10 bandejas (n.º 2 y 3) y el fregadero de Limpio, en la zona sucia/limpia, alineado con los hornos. Medidas supuesto 800×880×1800 mm (gabinete de abatimiento de 10 bandejas)."
   ],
   "mmWorld": {
     "x0": -7.183410167694092,
@@ -2450,7 +2478,7 @@
     }
   ],
   "alta": {
-    "glb": "cocina_alta_c9f95c628d0e.glb",
+    "glb": "cocina_alta_2a6a0d2a0493.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_3841a066e2e0.jpg"
@@ -2461,7 +2489,7 @@
     }
   },
   "quest": {
-    "glb": "cocina_quest_c9f95c628d0e.glb",
+    "glb": "cocina_quest_2a6a0d2a0493.glb",
     "lm": {
       "dia": {
         "cocina": "lm_dia_cocina_9d1f4b7f767b.jpg"
@@ -3759,6 +3787,12 @@
       -4.758,
       5.907,
       -4.638
+    ],
+    [
+      -1.48,
+      -3.1,
+      -0.68,
+      -2.22
     ]
   ],
   "aabbWalls": [
