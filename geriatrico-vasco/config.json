@@ -322,12 +322,6 @@
    2.247
   ],
   [
-   1.976,
-   0.894,
-   2.148,
-   1.251
-  ],
-  [
    1.833,
    -3.415,
    2.099,
@@ -350,12 +344,6 @@
    2.249,
    2.041,
    2.552
-  ],
-  [
-   1.826,
-   0.899,
-   1.998,
-   1.254
   ],
   [
    1.683,
@@ -692,6 +680,24 @@
    -3.4,
    1.85,
    -2.35
+  ],
+  [
+   -4.334,
+   0.9,
+   -4.094,
+   2.32
+  ],
+  [
+   -4.486,
+   2.32,
+   -4.094,
+   3.0
+  ],
+  [
+   1.92,
+   0.83,
+   2.06,
+   1.245
   ],
   [
    -5.275,
@@ -1640,7 +1646,7 @@
   "Extintor: en la XY del plano; su rótulo es práctica habitual. Se quitaron los rótulos de zona y de salida porque el plano no los dibuja. En v9 se cuelga del muro oeste del vestíbulo a la misma Y del plano: el símbolo cae en medio del paso, donde no hay muro.",
   "Zócalo sanitario de 10 cm: supuesto, práctica habitual de cocina industrial.",
   "Techo registrable 600×600 mm: supuesto.",
-  "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting). Tres tomas monofásicas sin cota (U_17, U_18, U_97) estaban puestas en el suelo junto a la mesa de pase: se quitaron (v9), igual que los desagües que quedaban tapados por las rejillas S25030110.",
+  "Tomas y desagües en la XY del DWG; la altura se toma de la cota del plano cuando existe (h … m del suelo / techo / a suelo) y, si no, de la práctica habitual (anotado en fitting). Tres tomas monofásicas sin cota (U_17, U_18, U_97) estaban puestas en el suelo junto a la mesa de pase: se quitaron (v9), igual que los desagües que quedaban tapados por las rejillas S25030110. v10: las tomas de pared que quedaban flotando a menos de 0,25 m del muro se pegan al muro más cercano (p. ej. las del cuarto oeste junto al fregadero); las que flotaban más lejos o caían fuera del edificio se quitan; las de equipos y techo se dejan.",
   "Abatidor (leyenda n.º 12): sin huella ni bloque en el plano. Se coloca como supuesto entre los hornos de 10 bandejas (n.º 2 y 3) y el fregadero de Limpio, en la zona sucia/limpia, alineado con los hornos. Medidas supuesto 800×880×1800 mm (gabinete de abatimiento de 10 bandejas).",
   "El DWG está en WCS con la cocina a 79,08° (11° respecto de los ejes). El PDF en papel tiene el mismo giro respecto al cajetín. El visor se endereza 10,92° para que los muros principales queden ortogonales, como se lee el plano (lavado a la izquierda, cámaras a la derecha).",
   "Suelo: gres antideslizante 33×33 cm en tono rojizo, el mismo de La Grandiella. Es un supuesto, porque el plano no define el acabado.",
@@ -1650,7 +1656,9 @@
   "Las campanas se pueden ocultar con un botón. La luz horneada se calculó sin campanas para que no quede su sombra al ocultarlas.",
   "Paso de servicio de 1,20 m detrás del muro sur de las cámaras: el plano dibuja ese muro con tres puertas de 0,82 m que abren hacia el sur, pero no dibuja el espacio de detrás. El ancho es un supuesto.",
   "Reloj de muñeca en VR: la brújula (norte del plano) y la hora de la esfera son un añadido de ayuda, no forman parte del proyecto.",
-  "Entrada al paso de las cámaras desde Limpio (v9): hueco de 0,96 m entre las jambas del DWG (x 0,66–1,62) con la hoja dibujada abierta contra el muro de la cámara 1. El paso termina al oeste en x≈0,46-0,61 (supuesto: el plano no dibuja ese testero)."
+  "Entrada al paso de las cámaras desde Limpio (v9): hueco de 0,96 m entre las jambas del DWG (x 0,66–1,62) con la hoja dibujada abierta contra el muro de la cámara 1. El paso termina al oeste en x≈0,46-0,61 (supuesto: el plano no dibuja ese testero).",
+  "Puertas del pasillo oeste (v10): el DWG dibuja la hoja x≈-5,45 / y 1,60-2,62 cerrada, con su arco; se deja cerrada contra la cara del cuarto con marco de acero. La otra hoja (y 0,05-1,05) no tiene muro ni hueco en 01.seccion: se quita. Los marcos y umbrales girados de versiones anteriores no están en el plano: fuera.",
+  "Pase este entre la cámara 1 y el pilar (v10): machón del DWG (x 1,92-2,06, y 0,83-1,25) y dintel a 2,05 m como en el resto de puertas (supuesto de altura)."
  ],
  "mmWorld": {
   "x0": -6.8492834091186525,
@@ -1815,28 +1823,28 @@
   }
  ],
  "alta": {
-  "glb": "cocina_alta_ef4490bf2a9a.glb",
+  "glb": "cocina_alta_d5c8c9d58aea.glb",
   "lm": {
    "dia": {
-    "cocina": "lm_dia_cocina_843e507df797.jpg"
+    "cocina": "lm_dia_cocina_41d0ca5e364f.jpg"
    },
    "noche": {
-    "cocina": "lm_noche_cocina_f0d7d45a0894.jpg"
+    "cocina": "lm_noche_cocina_60d8e17cdcfa.jpg"
    }
   }
  },
  "quest": {
-  "glb": "cocina_quest_ef4490bf2a9a.glb",
+  "glb": "cocina_quest_d5c8c9d58aea.glb",
   "lm": {
    "dia": {
-    "cocina": "lm_dia_cocina_9afa11a5eb7a.jpg"
+    "cocina": "lm_dia_cocina_e5e22381fc20.jpg"
    },
    "noche": {
-    "cocina": "lm_noche_cocina_4f928daa2561.jpg"
+    "cocina": "lm_noche_cocina_a57f7fac7fde.jpg"
    }
   }
  },
- "minimap": "minimap_af250e6a4644.png",
+ "minimap": "minimap_b9376a96c2f7.png",
  "hdri": "hdri_dia_8610a4a2d6c4.jpg",
  "plan": "plano_75c8f44507a3.jpg",
  "skies": {
@@ -1845,10 +1853,10 @@
  },
  "K": {
   "dia": {
-   "cocina": 4.568958183281236
+   "cocina": 4.599522162812496
   },
   "noche": {
-   "cocina": 4.140156792578105
+   "cocina": 4.3042852084375
   }
  },
  "modes": {
@@ -3086,12 +3094,6 @@
    2.247
   ],
   [
-   1.976,
-   0.894,
-   2.148,
-   1.251
-  ],
-  [
    1.833,
    -3.415,
    2.099,
@@ -3114,12 +3116,6 @@
    2.249,
    2.041,
    2.552
-  ],
-  [
-   1.826,
-   0.899,
-   1.998,
-   1.254
   ],
   [
    1.683,
@@ -3456,6 +3452,24 @@
    -3.4,
    1.85,
    -2.35
+  ],
+  [
+   -4.334,
+   0.9,
+   -4.094,
+   2.32
+  ],
+  [
+   -4.486,
+   2.32,
+   -4.094,
+   3.0
+  ],
+  [
+   1.92,
+   0.83,
+   2.06,
+   1.245
   ]
  ],
  "floorBounds": {
@@ -3989,7 +4003,7 @@
   ]
  ],
  "LMFLOOR": {
-  "dia": 0.10225,
-  "noche": 0.04081
+  "dia": 0.12029,
+  "noche": 0.04037
  }
 }
